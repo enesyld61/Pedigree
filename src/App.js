@@ -14,7 +14,7 @@ function App() {
       </Link>
       <Routes>
         <Route path="/" element={<Anket setData={setData} />} />
-        <Route path="/tree" element={<Tree data={data} />} />
+        <Route path="/tree" element={<Tree data={data} setData={setData} />} />
       </Routes>
     </div>
   );

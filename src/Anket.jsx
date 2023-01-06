@@ -11,16 +11,16 @@ export const Anket = ({ setData }) => {
   const [eKardesSayisi, setErkekKardesSayisi] = useState(0);
   const [kizKardesSayisi, setKizKardesSayisi] = useState(0);
 
-  const degisiklik = (e, func, id) => {
+  const degisiklik = (e, fonk, id) => {
     let temp = e.target.value;
     if (temp === "") {
       temp = 0;
       document.getElementById(`${id}`).value = temp;
     }
-    func(temp);
+    fonk(temp);
   };
 
-  const func = () => {
+  const submit = () => {
     let tempData = [
       { key: 0, n: "babane", s: "F", vir: 1 },
       { key: 1, n: "dede", s: "M", ux: 0 },
@@ -32,22 +32,10 @@ export const Anket = ({ setData }) => {
     ];
 
     for (let i = 1; i <= halaSayisi; i++) {
-      tempData.push({
-        key: tempData.length,
-        n: "hala",
-        s: "F",
-        m: 0,
-        f: 1,
-      });
+      tempData.push({ key: tempData.length, n: "hala", s: "F", m: 0, f: 1 });
     }
     for (let i = 1; i <= amcaSayisi; i++) {
-      tempData.push({
-        key: tempData.length,
-        n: "amca",
-        s: "M",
-        m: 0,
-        f: 1,
-      });
+      tempData.push({ key: tempData.length, n: "amca", s: "M", m: 0, f: 1 });
     }
 
     for (let i = 1; i <= teyzeSayisi; i++) {
@@ -75,59 +63,6 @@ export const Anket = ({ setData }) => {
       });
     }
 
-    /*
-    let tempData = [
-      { key: 0, n: "hasta", s: "M", m: 1, f: 2 },
-      { key: 1, n: "anne", s: "F", vir: 2, m: 3, f: 4 },
-      { key: 2, n: "baba", s: "M", ux: 1, m: 5, f: 6 },
-      { key: 3, n: "anane", s: "F", vir: 4 },
-      { key: 4, n: "dede", s: "M", ux: 3 },
-      { key: 5, n: "babane", s: "F", vir: 6 },
-      { key: 6, n: "dede", s: "M", ux: 5 },
-    ]; 
-    for (let i = 1; i <= halaSayisi; i++) {
-      tempData.push({
-        key: tempData.length,
-        n: "hala",
-        s: "F",
-        m: 5,
-        f: 6,
-      });
-    }
-    for (let i = 1; i <= amcaSayisi; i++) {
-      tempData.push({
-        key: tempData.length,
-        n: "amca",
-        s: "M",
-        m: 5,
-        f: 6,
-      });
-    }
-
-    for (let i = 1; i <= teyzeSayisi; i++) {
-      tempData.push({ key: tempData.length, n: "teyze", s: "F", m: 3, f: 4 });
-    }
-    for (let i = 1; i <= dayiSayisi; i++) {
-      tempData.push({ key: tempData.length, n: "dayı", s: "M", m: 3, f: 4 });
-    }
-    for (let i = 1; i <= kizKardesSayisi; i++) {
-      tempData.push({
-        key: tempData.length,
-        n: "kız kardeş",
-        s: "F",
-        m: 1,
-        f: 2,
-      });
-    }
-    for (let i = 1; i <= eKardesSayisi; i++) {
-      tempData.push({
-        key: tempData.length,
-        n: "erkek kardeş",
-        s: "M",
-        m: 1,
-        f: 2,
-      });
-    }*/
     setData(tempData);
   };
 
@@ -235,7 +170,7 @@ export const Anket = ({ setData }) => {
         <Button
           variant="primary"
           onClick={() => {
-            func();
+            submit();
           }}
         >
           Soy ağacını oluştur

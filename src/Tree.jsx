@@ -1,10 +1,11 @@
 /* eslint-disable eqeqeq */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import * as go from "gojs";
 import "./Tree.css";
+import { Form, Button, Row, Col } from "react-bootstrap";
 
-export const Tree = ({ data }) => {
+export const Tree = ({ data, setData }) => {
   let myDiagram;
   useEffect(() => {
     init();
@@ -35,6 +36,21 @@ export const Tree = ({ data }) => {
         columnSpacing: 10,
       }),
     });
+
+    const change = () => {
+      let flag = false;
+      for (let i = 0; i < data.length; i++) {
+        if (myDiagram.findNodeForKey(data[i].key).isSelected) {
+          flag = true;
+          setSelectedPerson(data[i]);
+        }
+      }
+      if (!flag) {
+        setSelectedPerson({ n: "", null: true });
+      }
+    };
+
+    myDiagram.addDiagramListener("ChangedSelection", change);
 
     const attrFill = (a) => {
       switch (a) {
@@ -289,11 +305,11 @@ export const Tree = ({ data }) => {
     );
 
     // n: name, s: sex, m: mother, f: father, ux: wife, vir: husband, a: attributes/markers
-    setupDiagram(myDiagram, data, 18 /* focus on this person */);
+    setupDiagram(myDiagram, data);
   }
 
   // create and initialize the Diagram.model given an array of node data representing people
-  function setupDiagram(diagram, array, focusId) {
+  function setupDiagram(diagram, array) {
     diagram.model = new go.GraphLinksModel({
       // declare support for link label nodes
       linkLabelKeysProperty: "labelKeys",
@@ -306,11 +322,6 @@ export const Tree = ({ data }) => {
     });
     setupMarriages(diagram);
     setupParents(diagram);
-
-    const node = diagram.findNodeForKey(focusId);
-    if (node !== null) {
-      diagram.select(node);
-    }
   }
 
   function findMarriage(diagram, a, b) {
@@ -721,12 +732,65 @@ export const Tree = ({ data }) => {
   }
   // end GenogramLayout class
 
-  //window.addEventListener("DOMContentLoaded", init);
+  useEffect(() => {
+    init();
+  }, [data]);
 
+  const [selectedPerson, setSelectedPerson] = useState({ n: "", null: true });
+
+  useEffect(() => {
+    if (selectedPerson.null) {
+      document.getElementById("formDiv").classList.add("invisible");
+    } else {
+      document.getElementById("formDiv").classList.remove("invisible");
+    }
+  }, [selectedPerson]);
   return (
     <div id="allSampleContent" className="p-4 w-full">
+      <Button
+        variant="primary"
+        onClick={() => {
+          let tempData = {
+            key: data.length,
+            n: `yeni kız id:${data.length}`,
+            s: "F",
+            m: 5,
+            f: 4,
+          };
+          setData([...data, tempData]);
+          document.getElementById("formDiv").classList.add("invisible");
+        }}
+      >
+        kız kardeş ekle
+      </Button>
       <div id="sample">
         <div id="myDiagramDiv"></div>
+      </div>
+      <div id="formDiv" className="invisible">
+        <Row>
+          <h1>{selectedPerson.n} düzenleme ekranı</h1>
+          <Col xs="6">
+            <Form.Label htmlFor="txt">Açıklama</Form.Label>
+            <Form.Control id="txt" as="textarea" rows={3} />
+          </Col>
+          <Col xs="6">
+            <h2>hastalık ekleme kısmı</h2>
+          </Col>
+          <Button
+            variant="primary"
+            onClick={() => {
+              const tempData = data;
+              tempData[selectedPerson.key].n =
+                document.getElementById("txt").value;
+              document.getElementById("txt").value = "";
+              setSelectedPerson({ n: "", null: true });
+              setData(tempData);
+              init();
+            }}
+          >
+            Kaydet
+          </Button>
+        </Row>
       </div>
     </div>
   );
