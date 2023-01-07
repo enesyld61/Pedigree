@@ -4,3 +4,13 @@ h3 {
 .formInput {
   width: 100px !important;
 }
+.radio {
+  display: inline-block !important;
+  margin-right: 10px;
+  margin-left: 0px;
+  font-size: larger;
+}
+
+#radioCol {
+  text-align: left !important;
+}

@@ -734,6 +734,13 @@ export const Tree = ({ data, setData }) => {
 
   useEffect(() => {
     init();
+    let temp = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        temp.push(data[i]);
+      }
+    }
+    console.log(temp);
   }, [data]);
 
   const [selectedPerson, setSelectedPerson] = useState({ n: "", null: true });
@@ -743,6 +750,12 @@ export const Tree = ({ data, setData }) => {
       document.getElementById("formDiv").classList.add("invisible");
     } else {
       document.getElementById("formDiv").classList.remove("invisible");
+      document.getElementById("txt").value = selectedPerson.n;
+      if (selectedPerson.a.includes("S")) {
+        document.getElementById("checkHasta").checked = true;
+      } else {
+        document.getElementById("checkHasta").checked = false;
+      }
     }
   }, [selectedPerson]);
   return (
@@ -756,12 +769,29 @@ export const Tree = ({ data, setData }) => {
             s: "F",
             m: 5,
             f: 4,
+            a: [],
           };
           setData([...data, tempData]);
           document.getElementById("formDiv").classList.add("invisible");
         }}
       >
         kız kardeş ekle
+      </Button>
+      <Button
+        variant="primary"
+        onClick={() => {
+          init();
+        }}
+      >
+        yenile
+      </Button>
+      <Button
+        variant="primary"
+        onClick={() => {
+          console.log(data);
+        }}
+      >
+        data
       </Button>
       <div id="sample">
         <div id="myDiagramDiv"></div>
@@ -774,23 +804,33 @@ export const Tree = ({ data, setData }) => {
             <Form.Control id="txt" as="textarea" rows={3} />
           </Col>
           <Col xs="6">
-            <h2>hastalık ekleme kısmı</h2>
+            <Form.Check type="checkbox" id="checkHasta">
+              <Form.Check.Input type="checkbox" isValid />
+              <Form.Check.Label>Hasta</Form.Check.Label>
+            </Form.Check>
           </Col>
-          <Button
-            variant="primary"
-            onClick={() => {
-              const tempData = data;
-              tempData[selectedPerson.key].n =
-                document.getElementById("txt").value;
-              document.getElementById("txt").value = "";
-              setSelectedPerson({ n: "", null: true });
-              setData(tempData);
-              init();
-            }}
-          >
-            Kaydet
-          </Button>
         </Row>
+        <Button
+          id="btnSave"
+          variant="primary"
+          onClick={() => {
+            const tempData = data;
+            tempData[selectedPerson.key].n =
+              document.getElementById("txt").value;
+            if (document.getElementById("checkHasta").checked) {
+              console.log("hasta");
+
+              tempData[selectedPerson.key].a = ["S"];
+            } else {
+              console.log("hasta degil");
+              tempData[selectedPerson.key].a = [];
+            }
+            setSelectedPerson({ n: "", null: true });
+            setData(tempData);
+          }}
+        >
+          Kaydet
+        </Button>
       </div>
     </div>
   );
