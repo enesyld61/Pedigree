@@ -8,6 +8,7 @@ import { Form, Button, Row, Col } from "react-bootstrap";
 export const Tree = ({ data, setData }) => {
   let myDiagram;
   useEffect(() => {
+    updateTemp();
     init();
   }, []);
 
@@ -732,18 +733,29 @@ export const Tree = ({ data, setData }) => {
   }
   // end GenogramLayout class
 
+  const [selectedPerson, setSelectedPerson] = useState({ n: "", null: true });
+  const [temp, setTemp] = useState([]);
+
   useEffect(() => {
-    init();
-    let temp = [];
+    setData(temp);
+  }, [temp]);
+
+  const updateTemp = (newObject = {}) => {
+    let tempData = [];
     for (let i = 0; i < data.length; i++) {
       if (data[i].hasOwnProperty("n")) {
-        temp.push(data[i]);
+        tempData.push(data[i]);
       }
     }
-    console.log(temp);
-  }, [data]);
+    if (newObject.hasOwnProperty("n")) {
+      tempData.push(newObject);
+    }
+    setTemp(tempData);
+  };
 
-  const [selectedPerson, setSelectedPerson] = useState({ n: "", null: true });
+  useEffect(() => {
+    init();
+  }, [data]);
 
   useEffect(() => {
     if (selectedPerson.null) {
@@ -763,15 +775,23 @@ export const Tree = ({ data, setData }) => {
       <Button
         variant="primary"
         onClick={() => {
-          let tempData = {
-            key: data.length,
-            n: `yeni kız id:${data.length}`,
+          let tempData = [];
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].hasOwnProperty("n")) {
+              tempData.push(data[i]);
+            }
+          }
+          let tempObj = {
+            key: tempData.length,
+            n: `yeni kız id:${tempData.length}`,
             s: "F",
             m: 5,
             f: 4,
             a: [],
           };
-          setData([...data, tempData]);
+          tempData.push(tempObj);
+          setTemp(tempData);
+
           document.getElementById("formDiv").classList.add("invisible");
         }}
       >
@@ -780,7 +800,7 @@ export const Tree = ({ data, setData }) => {
       <Button
         variant="primary"
         onClick={() => {
-          init();
+          updateTemp(temp);
         }}
       >
         yenile
@@ -788,10 +808,10 @@ export const Tree = ({ data, setData }) => {
       <Button
         variant="primary"
         onClick={() => {
-          console.log(data);
+          console.log(temp);
         }}
       >
-        data
+        temp
       </Button>
       <div id="sample">
         <div id="myDiagramDiv"></div>
@@ -814,19 +834,22 @@ export const Tree = ({ data, setData }) => {
           id="btnSave"
           variant="primary"
           onClick={() => {
-            const tempData = data;
+            let tempData = [];
+            for (let i = 0; i < data.length; i++) {
+              if (data[i].hasOwnProperty("n")) {
+                tempData.push(data[i]);
+              }
+            }
             tempData[selectedPerson.key].n =
               document.getElementById("txt").value;
             if (document.getElementById("checkHasta").checked) {
-              console.log("hasta");
-
               tempData[selectedPerson.key].a = ["S"];
             } else {
-              console.log("hasta degil");
               tempData[selectedPerson.key].a = [];
             }
             setSelectedPerson({ n: "", null: true });
-            setData(tempData);
+
+            setTemp(tempData);
           }}
         >
           Kaydet
