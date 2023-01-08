@@ -22,19 +22,19 @@ export const Anket = ({ setData }) => {
 
   const submit = (cinsiyet) => {
     let tempData = [
-      { key: 0, n: "babane", s: "F", vir: 1, a: [] },
-      { key: 1, n: "dede", s: "M", ux: 0, a: [] },
-      { key: 2, n: "anane", s: "F", vir: 3, a: [] },
-      { key: 3, n: "dede", s: "M", ux: 2, a: [] },
-      { key: 4, n: "baba", s: "M", m: 0, f: 1, ux: 5, a: [] },
-      { key: 5, n: "anne", s: "F", m: 2, f: 3, vir: 4, a: [] },
-      { key: 6, n: "hasta", s: cinsiyet, m: 5, f: 4, a: [] },
+      { key: 0, n: "", s: "F", vir: 1, a: [] },
+      { key: 1, n: "", s: "M", ux: 0, a: [] },
+      { key: 2, n: "", s: "F", vir: 3, a: [] },
+      { key: 3, n: "", s: "M", ux: 2, a: [] },
+      { key: 4, n: "", s: "M", m: 0, f: 1, ux: 5, a: [] },
+      { key: 5, n: "", s: "F", m: 2, f: 3, vir: 4, a: [] },
+      { key: 6, n: "Hasta", s: cinsiyet, m: 5, f: 4, a: [] },
     ];
 
     for (let i = 1; i <= halaSayisi; i++) {
       tempData.push({
         key: tempData.length,
-        n: "hala",
+        n: "",
         s: "F",
         m: 0,
         f: 1,
@@ -44,7 +44,7 @@ export const Anket = ({ setData }) => {
     for (let i = 1; i <= amcaSayisi; i++) {
       tempData.push({
         key: tempData.length,
-        n: "amca",
+        n: "",
         s: "M",
         m: 0,
         f: 1,
@@ -55,7 +55,7 @@ export const Anket = ({ setData }) => {
     for (let i = 1; i <= teyzeSayisi; i++) {
       tempData.push({
         key: tempData.length,
-        n: "teyze",
+        n: "",
         s: "F",
         m: 2,
         f: 3,
@@ -65,7 +65,7 @@ export const Anket = ({ setData }) => {
     for (let i = 1; i <= dayiSayisi; i++) {
       tempData.push({
         key: tempData.length,
-        n: "dayı",
+        n: "",
         s: "M",
         m: 2,
         f: 3,
@@ -75,7 +75,7 @@ export const Anket = ({ setData }) => {
     for (let i = 1; i <= kizKardesSayisi; i++) {
       tempData.push({
         key: tempData.length,
-        n: "kız kardeş",
+        n: "",
         s: "F",
         m: 5,
         f: 4,
@@ -85,7 +85,7 @@ export const Anket = ({ setData }) => {
     for (let i = 1; i <= eKardesSayisi; i++) {
       tempData.push({
         key: tempData.length,
-        n: "erkek kardeş",
+        n: "",
         s: "M",
         m: 5,
         f: 4,
@@ -99,6 +99,18 @@ export const Anket = ({ setData }) => {
   useEffect(() => {
     document.getElementById("radioKadin").checked = true;
   }, []);
+
+  const fileOnChange = () => {
+    console.log("seçildi dosya");
+    const input = document.getElementById("input");
+    let fr = new FileReader();
+    fr.readAsText(input.files[0]);
+    fr.onload = () => {
+      if (fr.result !== null) {
+        console.log(fr.result);
+      }
+    };
+  };
 
   return (
     <div>
@@ -239,6 +251,16 @@ export const Anket = ({ setData }) => {
           Soy ağacını oluştur
         </Button>
       </Link>
+      <br />
+      <br />
+      <br />
+      <input
+        type="file"
+        id="input"
+        onChange={() => {
+          fileOnChange();
+        }}
+      />
     </div>
   );
 };

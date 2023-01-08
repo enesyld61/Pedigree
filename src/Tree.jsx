@@ -768,39 +768,100 @@ export const Tree = ({ data, setData }) => {
       } else {
         document.getElementById("checkHasta").checked = false;
       }
+      if (
+        selectedPerson.hasOwnProperty("m") &&
+        selectedPerson.hasOwnProperty("f")
+      ) {
+        document.getElementById("btnAddErkek").disabled = false;
+        document.getElementById("btnAddKiz").disabled = false;
+        document.getElementById("btnAddEbeveyn").disabled = true;
+      } else {
+        document.getElementById("btnAddErkek").disabled = true;
+        document.getElementById("btnAddKiz").disabled = true;
+        document.getElementById("btnAddEbeveyn").disabled = false;
+      }
     }
   }, [selectedPerson]);
+
+  const addErkekKardes = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    let tempObj = {
+      key: tempData.length,
+      n: "",
+      s: "M",
+      m: selectedPerson.m,
+      f: selectedPerson.f,
+      a: [],
+    };
+    tempData.push(tempObj);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
+  const addKizKardes = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    let tempObj = {
+      key: tempData.length,
+      n: "",
+      s: "F",
+      m: selectedPerson.m,
+      f: selectedPerson.f,
+      a: [],
+    };
+    tempData.push(tempObj);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
+  const addEbeveyn = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    let tempObjM = {
+      key: tempData.length,
+      n: "",
+      s: "M",
+      ux: tempData.length + 1,
+      a: [],
+    };
+    let tempObjF = {
+      key: tempData.length + 1,
+      n: "",
+      s: "F",
+      vir: tempData.length,
+      a: [],
+    };
+    tempData[selectedPerson.key].f = tempData.length;
+    tempData[selectedPerson.key].m = tempData.length + 1;
+    tempData.push(tempObjM);
+    tempData.push(tempObjF);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
   return (
     <div id="allSampleContent" className="p-4 w-full">
       <Button
         variant="primary"
         onClick={() => {
-          let tempData = [];
-          for (let i = 0; i < data.length; i++) {
-            if (data[i].hasOwnProperty("n")) {
-              tempData.push(data[i]);
-            }
-          }
-          let tempObj = {
-            key: tempData.length,
-            n: `yeni kız id:${tempData.length}`,
-            s: "F",
-            m: 5,
-            f: 4,
-            a: [],
-          };
-          tempData.push(tempObj);
-          setTemp(tempData);
-
-          document.getElementById("formDiv").classList.add("invisible");
-        }}
-      >
-        kız kardeş ekle
-      </Button>
-      <Button
-        variant="primary"
-        onClick={() => {
           updateTemp(temp);
+          setSelectedPerson({ n: "", null: true });
         }}
       >
         yenile
@@ -818,16 +879,50 @@ export const Tree = ({ data, setData }) => {
       </div>
       <div id="formDiv" className="invisible">
         <Row>
-          <h1>{selectedPerson.n} düzenleme ekranı</h1>
-          <Col xs="6">
+          <h2 id="h2Edit">Düzenleme Ekranı</h2>
+          <Col xs="4" className="colDef">
             <Form.Label htmlFor="txt">Açıklama</Form.Label>
             <Form.Control id="txt" as="textarea" rows={3} />
           </Col>
-          <Col xs="6">
+          <Col xs="4" id="colCheck" className="colDef">
             <Form.Check type="checkbox" id="checkHasta">
               <Form.Check.Input type="checkbox" isValid />
               <Form.Check.Label>Hasta</Form.Check.Label>
             </Form.Check>
+          </Col>
+          <Col xs="4" id="colBtns">
+            <Button
+              id="btnAddEbeveyn"
+              className="addBtn"
+              variant="primary"
+              onClick={() => {
+                addEbeveyn();
+              }}
+            >
+              Ebeveyn ekle
+            </Button>
+
+            <Button
+              id="btnAddKiz"
+              className="addBtn"
+              variant="primary"
+              onClick={() => {
+                addKizKardes();
+              }}
+            >
+              Kız kardeş ekle
+            </Button>
+
+            <Button
+              id="btnAddErkek"
+              className="addBtn"
+              variant="primary"
+              onClick={() => {
+                addErkekKardes();
+              }}
+            >
+              Erkek kardeş ekle
+            </Button>
           </Col>
         </Row>
         <Button
