@@ -13,6 +13,10 @@ export const Anket = ({ setData }) => {
 
   const degisiklik = (e, fonk, id) => {
     let temp = e.target.value;
+    if (temp.substr(0, 1) === "0") {
+      temp = temp.substr(1);
+      document.getElementById(`${id}`).value = temp;
+    }
     if (temp === "") {
       temp = 0;
       document.getElementById(`${id}`).value = temp;
