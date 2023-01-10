@@ -21,6 +21,10 @@ export const Tree = ({ data, setData }) => {
     parentDiv.appendChild(div);
     const $ = go.GraphObject.make;
 
+    //////////////
+
+    /////////////////
+
     myDiagram = $(go.Diagram, "myDiagramDiv", {
       initialAutoScale: go.Diagram.Uniform,
       "undoManager.isEnabled": true,
@@ -179,17 +183,23 @@ export const Tree = ({ data, setData }) => {
         },
         new go.Binding("opacity", "hide", (h) => (h ? 0 : 1)),
         new go.Binding("pickable", "hide", (h) => !h),
+
         $(
           go.Panel,
           { name: "ICON" },
-          $(go.Shape, "Square", {
-            width: 40,
-            height: 40,
-            strokeWidth: 2,
-            fill: "white",
-            stroke: "#919191",
-            portId: "",
-          }),
+          $(
+            go.Shape,
+            "Square",
+            {
+              width: 40,
+              height: 40,
+              strokeWidth: 2,
+              fill: "white",
+              stroke: "#919191",
+              portId: "",
+            },
+            new go.Binding("fill", "color")
+          ),
           $(
             go.Panel,
             {
@@ -213,7 +223,6 @@ export const Tree = ({ data, setData }) => {
           {
             textAlign: "center",
             maxSize: new go.Size(80, NaN),
-            background: "rgba(255,255,255,0.5)",
           },
           new go.Binding("text", "n")
         )
@@ -235,14 +244,19 @@ export const Tree = ({ data, setData }) => {
         $(
           go.Panel,
           { name: "ICON" },
-          $(go.Shape, "Circle", {
-            width: 40,
-            height: 40,
-            strokeWidth: 2,
-            fill: "white",
-            stroke: "#a1a1a1",
-            portId: "",
-          }),
+          $(
+            go.Shape,
+            "Circle",
+            {
+              width: 40,
+              height: 40,
+              strokeWidth: 2,
+              fill: "white",
+              stroke: "#a1a1a1",
+              portId: "",
+            },
+            new go.Binding("fill", "color")
+          ),
           $(
             go.Panel,
             {
@@ -266,7 +280,6 @@ export const Tree = ({ data, setData }) => {
           {
             textAlign: "center",
             maxSize: new go.Size(80, NaN),
-            background: "rgba(255,255,255,0.5)",
           },
           new go.Binding("text", "n")
         )
@@ -764,6 +777,11 @@ export const Tree = ({ data, setData }) => {
       document.getElementById("formDiv").classList.remove("invisible");
       document.getElementById("txt").value = selectedPerson.n;
       if (selectedPerson.a.includes("S")) {
+        document.getElementById("checkOlu").checked = true;
+      } else {
+        document.getElementById("checkOlu").checked = false;
+      }
+      if (selectedPerson.color == "black") {
         document.getElementById("checkHasta").checked = true;
       } else {
         document.getElementById("checkHasta").checked = false;
@@ -797,6 +815,7 @@ export const Tree = ({ data, setData }) => {
       m: selectedPerson.m,
       f: selectedPerson.f,
       a: [],
+      color: "white",
     };
     tempData.push(tempObj);
     setTemp(tempData);
@@ -818,6 +837,7 @@ export const Tree = ({ data, setData }) => {
       m: selectedPerson.m,
       f: selectedPerson.f,
       a: [],
+      color: "white",
     };
     tempData.push(tempObj);
     setTemp(tempData);
@@ -838,6 +858,7 @@ export const Tree = ({ data, setData }) => {
       s: "M",
       ux: tempData.length + 1,
       a: [],
+      color: "white",
     };
     let tempObjF = {
       key: tempData.length + 1,
@@ -845,6 +866,7 @@ export const Tree = ({ data, setData }) => {
       s: "F",
       vir: tempData.length,
       a: [],
+      color: "white",
     };
     tempData[selectedPerson.key].f = tempData.length;
     tempData[selectedPerson.key].m = tempData.length + 1;
@@ -868,10 +890,11 @@ export const Tree = ({ data, setData }) => {
     )}`;
     const link = document.createElement("a");
     link.href = jsonString;
-    link.download = "data.json";
-
+    link.download = `${a}.json`;
     link.click();
   };
+
+  let a = "data";
 
   return (
     <div id="allSampleContent" className="p-4 w-full">
@@ -906,10 +929,10 @@ export const Tree = ({ data, setData }) => {
             <Form.Control id="txt" as="textarea" rows={3} />
           </Col>
           <Col xs="4" id="colCheck" className="colDef">
-            <Form.Check type="checkbox" id="checkHasta">
-              <Form.Check.Input type="checkbox" isValid />
-              <Form.Check.Label>Hasta</Form.Check.Label>
-            </Form.Check>
+            <Row>
+              <Form.Check label="Hasta" type="checkbox" id="checkHasta" />
+              <Form.Check label="Ölü" type="checkbox" id="checkOlu" />
+            </Row>
           </Col>
           <Col xs="4" id="colBtns">
             <Button
@@ -959,6 +982,11 @@ export const Tree = ({ data, setData }) => {
             tempData[selectedPerson.key].n =
               document.getElementById("txt").value;
             if (document.getElementById("checkHasta").checked) {
+              tempData[selectedPerson.key].color = "black";
+            } else {
+              tempData[selectedPerson.key].color = "white";
+            }
+            if (document.getElementById("checkOlu").checked) {
               tempData[selectedPerson.key].a = ["S"];
             } else {
               tempData[selectedPerson.key].a = [];

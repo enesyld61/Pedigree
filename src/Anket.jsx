@@ -22,13 +22,13 @@ export const Anket = ({ setData }) => {
 
   const submit = (cinsiyet) => {
     let tempData = [
-      { key: 0, n: "", s: "F", vir: 1, a: [] },
-      { key: 1, n: "", s: "M", ux: 0, a: [] },
-      { key: 2, n: "", s: "F", vir: 3, a: [] },
-      { key: 3, n: "", s: "M", ux: 2, a: [] },
-      { key: 4, n: "", s: "M", m: 0, f: 1, ux: 5, a: [] },
-      { key: 5, n: "", s: "F", m: 2, f: 3, vir: 4, a: [] },
-      { key: 6, n: "Hasta", s: cinsiyet, m: 5, f: 4, a: ["S"] },
+      { key: 0, n: "", s: "F", vir: 1, a: [], color: "white" },
+      { key: 1, n: "", s: "M", ux: 0, a: [], color: "white" },
+      { key: 2, n: "", s: "F", vir: 3, a: [], color: "white" },
+      { key: 3, n: "", s: "M", ux: 2, a: [], color: "white" },
+      { key: 4, n: "", s: "M", m: 0, f: 1, ux: 5, a: [], color: "white" },
+      { key: 5, n: "", s: "F", m: 2, f: 3, vir: 4, a: [], color: "white" },
+      { key: 6, n: "Hasta", s: cinsiyet, m: 5, f: 4, a: [], color: "black" },
     ];
 
     for (let i = 1; i <= halaSayisi; i++) {
@@ -39,6 +39,7 @@ export const Anket = ({ setData }) => {
         m: 0,
         f: 1,
         a: [],
+        color: "white",
       });
     }
     for (let i = 1; i <= amcaSayisi; i++) {
@@ -49,6 +50,7 @@ export const Anket = ({ setData }) => {
         m: 0,
         f: 1,
         a: [],
+        color: "white",
       });
     }
 
@@ -60,6 +62,7 @@ export const Anket = ({ setData }) => {
         m: 2,
         f: 3,
         a: [],
+        color: "white",
       });
     }
     for (let i = 1; i <= dayiSayisi; i++) {
@@ -70,6 +73,7 @@ export const Anket = ({ setData }) => {
         m: 2,
         f: 3,
         a: [],
+        color: "white",
       });
     }
     for (let i = 1; i <= kizKardesSayisi; i++) {
@@ -80,6 +84,7 @@ export const Anket = ({ setData }) => {
         m: 5,
         f: 4,
         a: [],
+        color: "white",
       });
     }
     for (let i = 1; i <= eKardesSayisi; i++) {
@@ -90,6 +95,7 @@ export const Anket = ({ setData }) => {
         m: 5,
         f: 4,
         a: [],
+        color: "white",
       });
     }
 
@@ -101,7 +107,6 @@ export const Anket = ({ setData }) => {
   }, []);
 
   const fileOnChange = () => {
-    console.log("seçildi dosya");
     const input = document.getElementById("input");
     let fr = new FileReader();
     fr.readAsText(input.files[0]);

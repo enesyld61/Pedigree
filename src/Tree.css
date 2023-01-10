@@ -19,7 +19,11 @@
 #btnSave {
   margin-top: 20px;
 }
+
 #checkHasta {
+  align-content: flex-start !important;
+}
+#checkOlu {
   align-content: flex-start !important;
 }
 
