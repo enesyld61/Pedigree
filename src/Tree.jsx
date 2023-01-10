@@ -855,6 +855,24 @@ export const Tree = ({ data, setData }) => {
     setSelectedPerson({ n: "", null: true });
   };
 
+  const downloadData = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+        delete tempData[tempData.length - 1].__gohashid;
+      }
+    }
+    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+      JSON.stringify(tempData)
+    )}`;
+    const link = document.createElement("a");
+    link.href = jsonString;
+    link.download = "data.json";
+
+    link.click();
+  };
+
   return (
     <div id="allSampleContent" className="p-4 w-full">
       <Button
@@ -873,6 +891,9 @@ export const Tree = ({ data, setData }) => {
         }}
       >
         temp
+      </Button>
+      <Button variant="warning" onClick={downloadData}>
+        Kaydet
       </Button>
       <div id="sample">
         <div id="myDiagramDiv"></div>

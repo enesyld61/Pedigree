@@ -28,7 +28,7 @@ export const Anket = ({ setData }) => {
       { key: 3, n: "", s: "M", ux: 2, a: [] },
       { key: 4, n: "", s: "M", m: 0, f: 1, ux: 5, a: [] },
       { key: 5, n: "", s: "F", m: 2, f: 3, vir: 4, a: [] },
-      { key: 6, n: "Hasta", s: cinsiyet, m: 5, f: 4, a: [] },
+      { key: 6, n: "Hasta", s: cinsiyet, m: 5, f: 4, a: ["S"] },
     ];
 
     for (let i = 1; i <= halaSayisi; i++) {
@@ -106,9 +106,8 @@ export const Anket = ({ setData }) => {
     let fr = new FileReader();
     fr.readAsText(input.files[0]);
     fr.onload = () => {
-      if (fr.result !== null) {
-        console.log(fr.result);
-      }
+      let tempData = JSON.parse(fr.result);
+      setData(tempData);
     };
   };
 
@@ -261,6 +260,9 @@ export const Anket = ({ setData }) => {
           fileOnChange();
         }}
       />
+      <Link to="/tree">
+        <Button variant="primary">Dosyadan çiz</Button>
+      </Link>
     </div>
   );
 };
