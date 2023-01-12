@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import * as go from "gojs";
 import "./Tree.css";
-import { Form, Button, Row, Col } from "react-bootstrap";
+import { Form, Button, Row, Col, InputGroup } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 export const Tree = ({ data, setData }) => {
   let myDiagram;
@@ -195,7 +196,7 @@ export const Tree = ({ data, setData }) => {
               height: 40,
               strokeWidth: 2,
               fill: "white",
-              stroke: "#919191",
+              stroke: "#000000",
               portId: "",
             },
             new go.Binding("fill", "color")
@@ -216,11 +217,24 @@ export const Tree = ({ data, setData }) => {
               margin: 1,
             },
             new go.Binding("itemArray", "a")
+          ),
+          // support "carry" for nodes
+          $(
+            go.Shape,
+            "Circle",
+            {
+              width: 8,
+              height: 8,
+              position: new go.Point(16.5, 16.5),
+              visible: false,
+            },
+            new go.Binding("visible", "carry")
           )
         ),
         $(
           go.TextBlock,
           {
+            font: "16px sans-serif",
             textAlign: "center",
             maxSize: new go.Size(80, NaN),
           },
@@ -252,7 +266,7 @@ export const Tree = ({ data, setData }) => {
               height: 40,
               strokeWidth: 2,
               fill: "white",
-              stroke: "#a1a1a1",
+              stroke: "#000000",
               portId: "",
             },
             new go.Binding("fill", "color")
@@ -273,11 +287,24 @@ export const Tree = ({ data, setData }) => {
               margin: 1,
             },
             new go.Binding("itemArray", "a")
+          ),
+          // support "carry" for nodes
+          $(
+            go.Shape,
+            "Circle",
+            {
+              width: 8,
+              height: 8,
+              position: new go.Point(16.5, 16.5),
+              visible: false,
+            },
+            new go.Binding("visible", "carry")
           )
         ),
         $(
           go.TextBlock,
           {
+            font: "16px sans-serif",
             textAlign: "center",
             maxSize: new go.Size(80, NaN),
           },
@@ -314,7 +341,22 @@ export const Tree = ({ data, setData }) => {
       $(
         go.Link,
         { selectable: false, layerName: "Background" },
-        $(go.Shape, { strokeWidth: 2.5, stroke: "#5d8cc1" /* blue */ })
+        // support "cm" on Marriage links
+        $(
+          go.Shape,
+          { isPanelMain: true, strokeWidth: 2.5, stroke: "#000000" },
+          new go.Binding("strokeWidth", "cm", (cm) => (cm ? 7 : 2.5))
+        ),
+        $(
+          go.Shape,
+          {
+            isPanelMain: true,
+            strokeWidth: 2,
+            stroke: "white",
+            visible: false,
+          },
+          new go.Binding("visible", "cm")
+        )
       )
     );
 
@@ -386,6 +428,7 @@ export const Tree = ({ data, setData }) => {
               labelKeys: [mlab.key],
               category: "Marriage",
             };
+            if (data.cm || wdata.cm) mdata.cm = true; // copy cm to link data
             model.addLinkData(mdata);
           }
         }
@@ -415,6 +458,7 @@ export const Tree = ({ data, setData }) => {
               labelKeys: [mlab.key],
               category: "Marriage",
             };
+            if (data.cm || hdata.cm) mdata.cm = true;
             model.addLinkData(mdata);
           }
         }
@@ -636,12 +680,6 @@ export const Tree = ({ data, setData }) => {
     commitNodes() {
       super.commitNodes();
       const horiz = this.direction == 0.0 || this.direction == 180.0;
-      // position regular nodes
-      this.network.vertexes.each((v) => {
-        if (v.node !== null && !v.node.isLinkLabel) {
-          v.node.moveTo(v.x, v.y);
-        }
-      });
       // position the spouses of each marriage vertex
       this.network.vertexes.each((v) => {
         if (v.node === null) return;
@@ -786,6 +824,11 @@ export const Tree = ({ data, setData }) => {
       } else {
         document.getElementById("checkHasta").checked = false;
       }
+      if (selectedPerson.carry) {
+        document.getElementById("checkTasiyici").checked = true;
+      } else {
+        document.getElementById("checkTasiyici").checked = false;
+      }
       if (
         selectedPerson.hasOwnProperty("m") &&
         selectedPerson.hasOwnProperty("f")
@@ -797,6 +840,18 @@ export const Tree = ({ data, setData }) => {
         document.getElementById("btnAddErkek").disabled = true;
         document.getElementById("btnAddKiz").disabled = true;
         document.getElementById("btnAddEbeveyn").disabled = false;
+      }
+      document.getElementById("divAkraba").classList.remove("invisible");
+      if (selectedPerson.hasOwnProperty("cm") && selectedPerson.cm) {
+        document.getElementById("checkAkraba").checked = true;
+      } else if (
+        selectedPerson.hasOwnProperty("vir") ||
+        selectedPerson.hasOwnProperty("ux")
+      ) {
+        document.getElementById("checkAkraba").checked = false;
+      } else {
+        document.getElementById("checkAkraba").checked = false;
+        document.getElementById("divAkraba").classList.add("invisible");
       }
     }
   }, [selectedPerson]);
@@ -859,6 +914,8 @@ export const Tree = ({ data, setData }) => {
       ux: tempData.length + 1,
       a: [],
       color: "white",
+      carry: false,
+      cm: false,
     };
     let tempObjF = {
       key: tempData.length + 1,
@@ -867,6 +924,8 @@ export const Tree = ({ data, setData }) => {
       vir: tempData.length,
       a: [],
       color: "white",
+      carry: false,
+      cm: false,
     };
     tempData[selectedPerson.key].f = tempData.length;
     tempData[selectedPerson.key].m = tempData.length + 1;
@@ -888,6 +947,11 @@ export const Tree = ({ data, setData }) => {
     const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
       JSON.stringify(tempData)
     )}`;
+    if (document.getElementById("dosyaAdi").value !== "") {
+      a = document.getElementById("dosyaAdi").value;
+    } else {
+      a = "data";
+    }
     const link = document.createElement("a");
     link.href = jsonString;
     link.download = `${a}.json`;
@@ -896,28 +960,93 @@ export const Tree = ({ data, setData }) => {
 
   let a = "data";
 
+  // const change = (id, id2) => {
+  //   if (selectedPerson.null === true) {
+  //   } else {
+  //     if (document.getElementById(`${id}`).checked) {
+  //       document.getElementById(`${id2}`).checked = false;
+  //     }
+  //   }
+  // };
+
+  const personalSave = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    tempData[selectedPerson.key].n = document.getElementById("txt").value;
+    if (document.getElementById("checkHasta").checked) {
+      tempData[selectedPerson.key].color = "black";
+    } else {
+      tempData[selectedPerson.key].color = "white";
+    }
+    if (document.getElementById("checkOlu").checked) {
+      tempData[selectedPerson.key].a = ["S"];
+    } else {
+      tempData[selectedPerson.key].a = [];
+    }
+    if (document.getElementById("checkTasiyici").checked) {
+      tempData[selectedPerson.key].carry = true;
+    } else {
+      tempData[selectedPerson.key].carry = false;
+    }
+    if (document.getElementById("checkAkraba").checked) {
+      temp[selectedPerson.key].cm = true;
+      if (selectedPerson.hasOwnProperty("vir")) {
+        temp[selectedPerson.vir].cm = true;
+      } else {
+        temp[selectedPerson.ux].cm = true;
+      }
+    } else if (selectedPerson.hasOwnProperty("cm")) {
+      temp[selectedPerson.key].cm = false;
+      if (selectedPerson.hasOwnProperty("vir")) {
+        temp[selectedPerson.vir].cm = false;
+      } else {
+        temp[selectedPerson.ux].cm = false;
+      }
+    }
+    setSelectedPerson({ n: "", null: true });
+
+    setTemp(tempData);
+  };
+
   return (
     <div id="allSampleContent" className="p-4 w-full">
-      <Button
-        variant="primary"
-        onClick={() => {
-          updateTemp(temp);
-          setSelectedPerson({ n: "", null: true });
-        }}
-      >
-        yenile
-      </Button>
-      <Button
-        variant="primary"
-        onClick={() => {
-          console.log(temp);
-        }}
-      >
-        temp
-      </Button>
-      <Button variant="warning" onClick={downloadData}>
-        Kaydet
-      </Button>
+      <Row>
+        <Col xs="4" id="colAnaMenu">
+          <Link to="/">
+            <Button variant="primary">Ana Menü</Button>
+          </Link>
+        </Col>
+        <Col xs="4" id="colYenile">
+          <Button
+            variant="primary"
+            onClick={() => {
+              updateTemp(temp);
+              setSelectedPerson({ n: "", null: true });
+            }}
+          >
+            Yenile
+          </Button>
+        </Col>
+        <Col xs="4">
+          <InputGroup className="mb-3" id="inputKaydet">
+            <Form.Control placeholder="Dosya adı" id="dosyaAdi" />
+            <Button
+              onClick={downloadData}
+              variant="outline-secondary"
+              id="button-addon2"
+            >
+              Kaydet
+            </Button>
+          </InputGroup>
+        </Col>
+      </Row>
+
+      <div></div>
+
       <div id="sample">
         <div id="myDiagramDiv"></div>
       </div>
@@ -930,8 +1059,32 @@ export const Tree = ({ data, setData }) => {
           </Col>
           <Col xs="4" id="colCheck" className="colDef">
             <Row>
-              <Form.Check label="Hasta" type="checkbox" id="checkHasta" />
-              <Form.Check label="Ölü" type="checkbox" id="checkOlu" />
+              <div>
+                <Form.Check
+                  //onChange={change("checkHasta")}
+                  label="Hasta"
+                  type="checkbox"
+                  id="checkHasta"
+                />
+              </div>
+              <div>
+                <Form.Check
+                  //onChange={change("checkTasiyici")}
+                  label="Taşıyıcı"
+                  type="checkbox"
+                  id="checkTasiyici"
+                />
+              </div>
+              <div>
+                <Form.Check label="Ölü" type="checkbox" id="checkOlu" />
+              </div>
+              <div id="divAkraba">
+                <Form.Check
+                  id="checkAkraba"
+                  label="Akraba evliliği"
+                  type="checkbox"
+                />
+              </div>
             </Row>
           </Col>
           <Col xs="4" id="colBtns">
@@ -969,33 +1122,7 @@ export const Tree = ({ data, setData }) => {
             </Button>
           </Col>
         </Row>
-        <Button
-          id="btnSave"
-          variant="primary"
-          onClick={() => {
-            let tempData = [];
-            for (let i = 0; i < data.length; i++) {
-              if (data[i].hasOwnProperty("n")) {
-                tempData.push(data[i]);
-              }
-            }
-            tempData[selectedPerson.key].n =
-              document.getElementById("txt").value;
-            if (document.getElementById("checkHasta").checked) {
-              tempData[selectedPerson.key].color = "black";
-            } else {
-              tempData[selectedPerson.key].color = "white";
-            }
-            if (document.getElementById("checkOlu").checked) {
-              tempData[selectedPerson.key].a = ["S"];
-            } else {
-              tempData[selectedPerson.key].a = [];
-            }
-            setSelectedPerson({ n: "", null: true });
-
-            setTemp(tempData);
-          }}
-        >
+        <Button id="btnSave" variant="primary" onClick={personalSave}>
           Kaydet
         </Button>
       </div>
