@@ -5,6 +5,8 @@ import * as go from "gojs";
 import "./Tree.css";
 import { Form, Button, Row, Col, InputGroup } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export const Tree = ({ data, setData }) => {
   const [selectedPerson, setSelectedPerson] = useState({ n: "", null: true });
@@ -810,6 +812,7 @@ export const Tree = ({ data, setData }) => {
   }, [data]);
 
   useEffect(() => {
+    console.log(temp);
     document.getElementById("btnAddEvlilik").disabled = true;
     if (selec.length === 0 || selec.length > 2) {
       document.getElementById("formDiv").classList.add("invisible");
@@ -1095,7 +1098,7 @@ export const Tree = ({ data, setData }) => {
     }
     if (selec[0].s == "F") {
       tempData[selec[0].key].vir = selec[1].key;
-      tempData[selec[1].key].ex = selec[0].key;
+      tempData[selec[1].key].ux = selec[0].key;
     } else {
       tempData[selec[0].key].ux = selec[1].key;
       tempData[selec[1].key].vir = selec[0].key;
@@ -1145,28 +1148,6 @@ export const Tree = ({ data, setData }) => {
     setSelectedPerson({ n: "", null: true });
   };
 
-  const downloadData = () => {
-    let tempData = [];
-    for (let i = 0; i < data.length; i++) {
-      if (data[i].hasOwnProperty("n")) {
-        tempData.push(data[i]);
-        delete tempData[tempData.length - 1].__gohashid;
-      }
-    }
-    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
-      JSON.stringify(tempData)
-    )}`;
-
-    const link = document.createElement("a");
-    link.href = jsonString;
-    if (document.getElementById("dosyaAdi").value !== "") {
-      link.download = `${document.getElementById("dosyaAdi").value}.json`;
-    } else {
-      link.download = `data.json`;
-    }
-    link.click();
-  };
-
   const personalSave = () => {
     let tempData = [];
     for (let i = 0; i < data.length; i++) {
@@ -1210,6 +1191,94 @@ export const Tree = ({ data, setData }) => {
     setTemp(tempData);
   };
 
+  const downloadData = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+        delete tempData[tempData.length - 1].__gohashid;
+      }
+    }
+    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+      JSON.stringify(tempData)
+    )}`;
+
+    const link = document.createElement("a");
+    link.href = jsonString;
+    if (document.getElementById("dosyaAdi").value !== "") {
+      link.download = `${document.getElementById("dosyaAdi").value}.json`;
+    } else {
+      link.download = `data.json`;
+    }
+    link.click();
+    updateTemp(temp);
+    setSelectedPerson({ n: "", null: true });
+    document.getElementById("formDiv").classList.add("invisible");
+  };
+
+  const downloadPdf = () => {
+    html2canvas(document.getElementById("myDiagramDiv")).then((canvas) => {
+      let base64image = canvas.toDataURL("image/png");
+      let pdf = new jsPDF("p", "px", [1600, 1131]);
+      pdf.addImage(base64image, "PNG", 15, 15, 1110, 360);
+      if (document.getElementById("pdfAdi").value == "") {
+        pdf.save("data.pdf");
+      } else {
+        pdf.save(`${document.getElementById("pdfAdi").value}.pdf`);
+      }
+    });
+  };
+
+  const kisiyiSil = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        if (data[i].key !== selectedPerson.key) {
+          tempData.push(data[i]);
+        }
+      }
+    }
+    if (selectedPerson.s == "F") {
+      for (let i = 0; i < tempData.length; i++) {
+        if (
+          tempData[i].hasOwnProperty("m") &&
+          tempData[i].m == selectedPerson.key
+        ) {
+          delete tempData[i].m;
+          delete tempData[i].f;
+        }
+        if (
+          tempData[i].hasOwnProperty("ux") &&
+          tempData[i].ux == selectedPerson.key
+        ) {
+          delete tempData[i].ux;
+          delete tempData[i].cm;
+        }
+      }
+    } else {
+      for (let i = 0; i < tempData.length; i++) {
+        if (
+          tempData[i].hasOwnProperty("f") &&
+          tempData[i].f == selectedPerson.key
+        ) {
+          delete tempData[i].f;
+          delete tempData[i].m;
+        }
+        if (
+          tempData[i].hasOwnProperty("vir") &&
+          tempData[i].vir == selectedPerson.key
+        ) {
+          delete tempData[i].vir;
+          delete tempData[i].cm;
+        }
+      }
+    }
+
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
   return (
     <div id="allSampleContent" className="p-4 w-full">
       <Row>
@@ -1230,7 +1299,19 @@ export const Tree = ({ data, setData }) => {
             Yenile
           </Button>
         </Col>
-        <Col xs="4">
+        <Col xs="2">
+          <InputGroup className="mb-3" id="inputPdf">
+            <Form.Control placeholder="Pdf adı" id="pdfAdi" />
+            <Button
+              onClick={downloadPdf}
+              variant="outline-secondary"
+              id="button-addon2"
+            >
+              Pdf indir
+            </Button>
+          </InputGroup>
+        </Col>
+        <Col xs="2">
           <InputGroup className="mb-3" id="inputKaydet">
             <Form.Control placeholder="Dosya adı" id="dosyaAdi" />
             <Button
@@ -1238,7 +1319,7 @@ export const Tree = ({ data, setData }) => {
               variant="outline-secondary"
               id="button-addon2"
             >
-              Kaydet
+              Veri kaydet
             </Button>
           </InputGroup>
         </Col>
@@ -1248,10 +1329,6 @@ export const Tree = ({ data, setData }) => {
       </div>
       <div id="formDiv" className="invisible">
         <Row>
-          <Col xs="4" id="colDefinition" className="colDef">
-            <Form.Label htmlFor="txt">Açıklama</Form.Label>
-            <Form.Control id="txt" as="textarea" rows={3} />
-          </Col>
           <Col xs="4" id="colCheck" className="colDef">
             <Row>
               <div>
@@ -1276,6 +1353,14 @@ export const Tree = ({ data, setData }) => {
               </div>
             </Row>
           </Col>
+          <Col xs="4" id="colDefinition" className="colDef">
+            <Form.Label htmlFor="txt">Açıklama</Form.Label>
+            <Form.Control id="txt" as="textarea" rows={3} />
+            <Button id="btnSave" variant="primary" onClick={personalSave}>
+              Kaydet
+            </Button>
+          </Col>
+
           <Col xs="4" id="colBtns">
             <Row>
               <Col xs="6">
@@ -1380,11 +1465,21 @@ export const Tree = ({ data, setData }) => {
                 </Button>
               </Col>
             </Row>
+            <Row>
+              <Col>
+                <Button
+                  className="addBtn"
+                  variant="danger"
+                  onClick={() => {
+                    kisiyiSil();
+                  }}
+                >
+                  Kişiyi sil
+                </Button>
+              </Col>
+            </Row>
           </Col>
         </Row>
-        <Button id="btnSave" variant="primary" onClick={personalSave}>
-          Kaydet
-        </Button>
       </div>
     </div>
   );
