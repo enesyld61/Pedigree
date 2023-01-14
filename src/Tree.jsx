@@ -7,6 +7,9 @@ import { Form, Button, Row, Col, InputGroup } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
 export const Tree = ({ data, setData }) => {
+  const [selectedPerson, setSelectedPerson] = useState({ n: "", null: true });
+  const [temp, setTemp] = useState([]);
+  const [selec, setSelec] = useState([]);
   let myDiagram;
   useEffect(() => {
     updateTemp();
@@ -21,10 +24,6 @@ export const Tree = ({ data, setData }) => {
     div.setAttribute("id", "myDiagramDiv");
     parentDiv.appendChild(div);
     const $ = go.GraphObject.make;
-
-    //////////////
-
-    /////////////////
 
     myDiagram = $(go.Diagram, "myDiagramDiv", {
       initialAutoScale: go.Diagram.Uniform,
@@ -45,14 +44,19 @@ export const Tree = ({ data, setData }) => {
 
     const change = () => {
       let flag = false;
+      let selectedTwo = [];
+      setSelec(0);
       for (let i = 0; i < data.length; i++) {
         if (myDiagram.findNodeForKey(data[i].key).isSelected) {
           flag = true;
-          setSelectedPerson(data[i]);
+          selectedTwo.push(data[i]);
         }
       }
+      setSelec(selectedTwo);
       if (!flag) {
         setSelectedPerson({ n: "", null: true });
+      } else {
+        setSelectedPerson(selectedTwo[0]);
       }
     };
 
@@ -784,9 +788,6 @@ export const Tree = ({ data, setData }) => {
   }
   // end GenogramLayout class
 
-  const [selectedPerson, setSelectedPerson] = useState({ n: "", null: true });
-  const [temp, setTemp] = useState([]);
-
   useEffect(() => {
     setData(temp);
   }, [temp]);
@@ -809,52 +810,113 @@ export const Tree = ({ data, setData }) => {
   }, [data]);
 
   useEffect(() => {
-    if (selectedPerson.null) {
+    document.getElementById("btnAddEvlilik").disabled = true;
+    if (selec.length === 0 || selec.length > 2) {
       document.getElementById("formDiv").classList.add("invisible");
-    } else {
+    } else if (selec.length <= 2) {
       document.getElementById("formDiv").classList.remove("invisible");
-      document.getElementById("txt").value = selectedPerson.n;
-      if (selectedPerson.a.includes("S")) {
-        document.getElementById("checkOlu").checked = true;
+      if (selec.length === 2) {
+        if (
+          selec[0].s !== selec[1].s &&
+          !(selec[0].hasOwnProperty("vir") || selec[0].hasOwnProperty("ux")) &&
+          !(selec[0].hasOwnProperty("ux") || selec[1].hasOwnProperty("vir")) &&
+          !(
+            (selec[0].hasOwnProperty("m") &&
+              selec[1].hasOwnProperty("m") &&
+              selec[0].m === selec[1].m) ||
+            (selec[0].hasOwnProperty("f") &&
+              selec[1].hasOwnProperty("f") &&
+              selec[0].f === selec[1].f)
+          )
+        ) {
+          document.getElementById("formDiv").classList.remove("invisible");
+          document.getElementById("btnAddEvlilik").disabled = false;
+        }
+        if (
+          (selec[0].hasOwnProperty("vir") && selec[0].vir == selec[1].key) ||
+          (selec[0].hasOwnProperty("ux") && selec[0].ux == selec[1].key) ||
+          selec[0].hasOwnProperty("m") ||
+          selec[1].hasOwnProperty("m")
+        ) {
+          document.getElementById("btnAddEbeveyn").disabled = true;
+        } else {
+          document.getElementById("btnAddEbeveyn").disabled = false;
+        }
+        if (
+          (selec[0].hasOwnProperty("vir") && selec[0].vir == selec[1].key) ||
+          (selec[0].hasOwnProperty("ux") && selec[0].ux == selec[1].key)
+        ) {
+          document.getElementById("btnAddErkekCocuk").disabled = false;
+          document.getElementById("btnAddKizCocuk").disabled = false;
+        } else {
+          document.getElementById("btnAddErkekCocuk").disabled = true;
+          document.getElementById("btnAddKizCocuk").disabled = true;
+        }
+        if (
+          selec[0].hasOwnProperty("m") &&
+          selec[0].hasOwnProperty("m") &&
+          selec[0].m == selec[1].m
+        ) {
+          document.getElementById("btnAddErkek").disabled = false;
+          document.getElementById("btnAddKiz").disabled = false;
+        } else {
+          document.getElementById("btnAddErkek").disabled = true;
+          document.getElementById("btnAddKiz").disabled = true;
+        }
+        document.getElementById("colDefinition").classList.add("invisible");
+        document.getElementById("colCheck").classList.add("invisible");
       } else {
-        document.getElementById("checkOlu").checked = false;
-      }
-      if (selectedPerson.color == "black") {
-        document.getElementById("checkHasta").checked = true;
-      } else {
-        document.getElementById("checkHasta").checked = false;
-      }
-      if (selectedPerson.carry) {
-        document.getElementById("checkTasiyici").checked = true;
-      } else {
-        document.getElementById("checkTasiyici").checked = false;
-      }
-      if (
-        selectedPerson.hasOwnProperty("m") &&
-        selectedPerson.hasOwnProperty("f")
-      ) {
-        document.getElementById("btnAddErkek").disabled = false;
-        document.getElementById("btnAddKiz").disabled = false;
-        document.getElementById("btnAddEbeveyn").disabled = true;
-      } else {
-        document.getElementById("btnAddErkek").disabled = true;
-        document.getElementById("btnAddKiz").disabled = true;
-        document.getElementById("btnAddEbeveyn").disabled = false;
-      }
-      document.getElementById("divAkraba").classList.remove("invisible");
-      if (selectedPerson.hasOwnProperty("cm") && selectedPerson.cm) {
-        document.getElementById("checkAkraba").checked = true;
-      } else if (
-        selectedPerson.hasOwnProperty("vir") ||
-        selectedPerson.hasOwnProperty("ux")
-      ) {
-        document.getElementById("checkAkraba").checked = false;
-      } else {
-        document.getElementById("checkAkraba").checked = false;
-        document.getElementById("divAkraba").classList.add("invisible");
+        document.getElementById("colDefinition").classList.remove("invisible");
+        document.getElementById("colCheck").classList.remove("invisible");
+        document.getElementById("txt").value = selectedPerson.n;
+        if (selectedPerson.a.includes("S")) {
+          document.getElementById("checkOlu").checked = true;
+        } else {
+          document.getElementById("checkOlu").checked = false;
+        }
+        if (selectedPerson.color == "black") {
+          document.getElementById("checkHasta").checked = true;
+        } else {
+          document.getElementById("checkHasta").checked = false;
+        }
+        if (selectedPerson.carry) {
+          document.getElementById("checkTasiyici").checked = true;
+        } else {
+          document.getElementById("checkTasiyici").checked = false;
+        }
+        if (
+          selectedPerson.hasOwnProperty("m") &&
+          selectedPerson.hasOwnProperty("f")
+        ) {
+          document.getElementById("btnAddErkek").disabled = false;
+          document.getElementById("btnAddKiz").disabled = false;
+          document.getElementById("btnAddEbeveyn").disabled = true;
+        } else {
+          document.getElementById("btnAddErkek").disabled = true;
+          document.getElementById("btnAddKiz").disabled = true;
+          document.getElementById("btnAddEbeveyn").disabled = false;
+        }
+        document.getElementById("divAkraba").classList.remove("invisible");
+        if (selectedPerson.hasOwnProperty("cm") && selectedPerson.cm) {
+          document.getElementById("checkAkraba").checked = true;
+        } else if (
+          selectedPerson.hasOwnProperty("vir") ||
+          selectedPerson.hasOwnProperty("ux")
+        ) {
+          document.getElementById("checkAkraba").checked = false;
+          document.getElementById("btnAddErkekCocuk").disabled = false;
+          document.getElementById("btnAddKizCocuk").disabled = false;
+        } else {
+          document.getElementById("checkAkraba").checked = false;
+          document.getElementById("btnAddErkekCocuk").disabled = true;
+          document.getElementById("btnAddKizCocuk").disabled = true;
+          document.getElementById("divAkraba").classList.add("invisible");
+        }
       }
     }
-  }, [selectedPerson]);
+    if (selec.length === 2) {
+    }
+  }, [selec]);
 
   const addErkekKardes = () => {
     let tempData = [];
@@ -907,30 +969,177 @@ export const Tree = ({ data, setData }) => {
         tempData.push(data[i]);
       }
     }
-    let tempObjM = {
+    let tempObjM, tempObjF;
+    if (selec.length === 2) {
+      tempObjM = {
+        key: tempData.length,
+        n: "",
+        s: "M",
+        ux: tempData.length + 1,
+        a: [],
+        color: "white",
+        carry: false,
+        cm: false,
+      };
+      tempObjF = {
+        key: tempData.length + 1,
+        n: "",
+        s: "F",
+        vir: tempData.length,
+        a: [],
+        color: "white",
+        carry: false,
+        cm: false,
+      };
+      tempData[selec[0].key].f = tempData.length;
+      tempData[selec[0].key].m = tempData.length + 1;
+      tempData[selec[1].key].f = tempData.length;
+      tempData[selec[1].key].m = tempData.length + 1;
+    } else {
+      tempObjM = {
+        key: tempData.length,
+        n: "",
+        s: "M",
+        ux: tempData.length + 1,
+        a: [],
+        color: "white",
+        carry: false,
+        cm: false,
+      };
+      tempObjF = {
+        key: tempData.length + 1,
+        n: "",
+        s: "F",
+        vir: tempData.length,
+        a: [],
+        color: "white",
+        carry: false,
+        cm: false,
+      };
+      tempData[selectedPerson.key].f = tempData.length;
+      tempData[selectedPerson.key].m = tempData.length + 1;
+    }
+    tempData.push(tempObjM);
+    tempData.push(tempObjF);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
+  const addErkekCocuk = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    let mother, father;
+    if (selectedPerson.s == "F") {
+      mother = selectedPerson.key;
+      father = selectedPerson.vir;
+    } else {
+      mother = selectedPerson.ux;
+      father = selectedPerson.key;
+    }
+    let tempObj = {
       key: tempData.length,
       n: "",
       s: "M",
-      ux: tempData.length + 1,
+      m: mother,
+      f: father,
       a: [],
       color: "white",
-      carry: false,
-      cm: false,
     };
-    let tempObjF = {
-      key: tempData.length + 1,
+    tempData.push(tempObj);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
+  const addKizCocuk = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    let mother, father;
+    if (selectedPerson.s == "F") {
+      mother = selectedPerson.key;
+      father = selectedPerson.vir;
+    } else {
+      mother = selectedPerson.ux;
+      father = selectedPerson.key;
+    }
+    let tempObj = {
+      key: tempData.length,
       n: "",
       s: "F",
-      vir: tempData.length,
+      m: mother,
+      f: father,
       a: [],
       color: "white",
-      carry: false,
-      cm: false,
     };
-    tempData[selectedPerson.key].f = tempData.length;
-    tempData[selectedPerson.key].m = tempData.length + 1;
-    tempData.push(tempObjM);
-    tempData.push(tempObjF);
+    tempData.push(tempObj);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
+  const addEvlilik = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    if (selec[0].s == "F") {
+      tempData[selec[0].key].vir = selec[1].key;
+      tempData[selec[1].key].ex = selec[0].key;
+    } else {
+      tempData[selec[0].key].ux = selec[1].key;
+      tempData[selec[1].key].vir = selec[0].key;
+    }
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
+  const addYeniKisiKadin = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    let tempObj = {
+      key: tempData.length,
+      n: "",
+      s: "F",
+      a: [],
+      color: "white",
+    };
+    tempData.push(tempObj);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelectedPerson({ n: "", null: true });
+  };
+
+  const addYeniKisiErkek = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    let tempObj = {
+      key: tempData.length,
+      n: "",
+      s: "M",
+      a: [],
+      color: "white",
+    };
+    tempData.push(tempObj);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
     setSelectedPerson({ n: "", null: true });
@@ -947,27 +1156,16 @@ export const Tree = ({ data, setData }) => {
     const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
       JSON.stringify(tempData)
     )}`;
-    if (document.getElementById("dosyaAdi").value !== "") {
-      a = document.getElementById("dosyaAdi").value;
-    } else {
-      a = "data";
-    }
+
     const link = document.createElement("a");
     link.href = jsonString;
-    link.download = `${a}.json`;
+    if (document.getElementById("dosyaAdi").value !== "") {
+      link.download = `${document.getElementById("dosyaAdi").value}.json`;
+    } else {
+      link.download = `data.json`;
+    }
     link.click();
   };
-
-  let a = "data";
-
-  // const change = (id, id2) => {
-  //   if (selectedPerson.null === true) {
-  //   } else {
-  //     if (document.getElementById(`${id}`).checked) {
-  //       document.getElementById(`${id2}`).checked = false;
-  //     }
-  //   }
-  // };
 
   const personalSave = () => {
     let tempData = [];
@@ -1008,7 +1206,7 @@ export const Tree = ({ data, setData }) => {
       }
     }
     setSelectedPerson({ n: "", null: true });
-
+    setSelec([]);
     setTemp(tempData);
   };
 
@@ -1026,6 +1224,7 @@ export const Tree = ({ data, setData }) => {
             onClick={() => {
               updateTemp(temp);
               setSelectedPerson({ n: "", null: true });
+              document.getElementById("formDiv").classList.add("invisible");
             }}
           >
             Yenile
@@ -1044,32 +1243,22 @@ export const Tree = ({ data, setData }) => {
           </InputGroup>
         </Col>
       </Row>
-
-      <div></div>
-
       <div id="sample">
         <div id="myDiagramDiv"></div>
       </div>
       <div id="formDiv" className="invisible">
         <Row>
-          <h2 id="h2Edit">Düzenleme Ekranı</h2>
-          <Col xs="4" className="colDef">
+          <Col xs="4" id="colDefinition" className="colDef">
             <Form.Label htmlFor="txt">Açıklama</Form.Label>
             <Form.Control id="txt" as="textarea" rows={3} />
           </Col>
           <Col xs="4" id="colCheck" className="colDef">
             <Row>
               <div>
-                <Form.Check
-                  //onChange={change("checkHasta")}
-                  label="Hasta"
-                  type="checkbox"
-                  id="checkHasta"
-                />
+                <Form.Check label="Hasta" type="checkbox" id="checkHasta" />
               </div>
               <div>
                 <Form.Check
-                  //onChange={change("checkTasiyici")}
                   label="Taşıyıcı"
                   type="checkbox"
                   id="checkTasiyici"
@@ -1088,38 +1277,109 @@ export const Tree = ({ data, setData }) => {
             </Row>
           </Col>
           <Col xs="4" id="colBtns">
-            <Button
-              id="btnAddEbeveyn"
-              className="addBtn"
-              variant="primary"
-              onClick={() => {
-                addEbeveyn();
-              }}
-            >
-              Ebeveyn ekle
-            </Button>
-
-            <Button
-              id="btnAddKiz"
-              className="addBtn"
-              variant="primary"
-              onClick={() => {
-                addKizKardes();
-              }}
-            >
-              Kız kardeş ekle
-            </Button>
-
-            <Button
-              id="btnAddErkek"
-              className="addBtn"
-              variant="primary"
-              onClick={() => {
-                addErkekKardes();
-              }}
-            >
-              Erkek kardeş ekle
-            </Button>
+            <Row>
+              <Col xs="6">
+                <Button
+                  id="btnAddKiz"
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addKizKardes();
+                  }}
+                >
+                  Kız kardeş ekle
+                </Button>
+              </Col>
+              <Col xs="6">
+                <Button
+                  id="btnAddErkek"
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addErkekKardes();
+                  }}
+                >
+                  Erkek kardeş ekle
+                </Button>
+              </Col>
+            </Row>
+            <Row>
+              <Col xs="6">
+                <Button
+                  id="btnAddKizCocuk"
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addKizCocuk();
+                  }}
+                >
+                  Kız Çocuk ekle
+                </Button>
+              </Col>
+              <Col xs="6">
+                <Button
+                  id="btnAddErkekCocuk"
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addErkekCocuk();
+                  }}
+                >
+                  Erkek çocuk ekle
+                </Button>
+              </Col>
+            </Row>
+            <Row>
+              <Col xs="6">
+                <Button
+                  id="btnAddEbeveyn"
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addEbeveyn();
+                  }}
+                >
+                  Ebeveyn ekle
+                </Button>
+              </Col>
+              <Col xs="6">
+                <Button
+                  id="btnAddEvlilik"
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addEvlilik();
+                  }}
+                >
+                  Evlilik ekle
+                </Button>
+              </Col>
+            </Row>
+            <hr />
+            <Row>
+              <Col xs="6">
+                <Button
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addYeniKisiKadin();
+                  }}
+                >
+                  Yeni kişi ekle (Kadın)
+                </Button>
+              </Col>
+              <Col xs="6">
+                <Button
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addYeniKisiErkek();
+                  }}
+                >
+                  Yeni kişi ekle (Erkek)
+                </Button>
+              </Col>
+            </Row>
           </Col>
         </Row>
         <Button id="btnSave" variant="primary" onClick={personalSave}>
