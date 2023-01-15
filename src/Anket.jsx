@@ -181,6 +181,7 @@ export const Anket = ({ setData }) => {
 
   useEffect(() => {
     document.getElementById("radioKadin").checked = true;
+    document.title = "Pedigree Chart - Form";
   }, []);
 
   const fileOnChange = () => {

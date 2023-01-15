@@ -16,6 +16,7 @@ export const Tree = ({ data, setData }) => {
   useEffect(() => {
     updateTemp();
     init();
+    document.title = "Pedigree Chart - Tree";
   }, []);
 
   function init() {
