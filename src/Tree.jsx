@@ -1420,7 +1420,7 @@ export const Tree = ({ data, setData }) => {
                     addKizCocuk();
                   }}
                 >
-                  Kız Çocuk ekle
+                  Kız çocuk ekle
                 </Button>
               </Col>
               <Col xs="6">
