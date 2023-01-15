@@ -812,7 +812,6 @@ export const Tree = ({ data, setData }) => {
   }, [data]);
 
   useEffect(() => {
-    console.log(temp);
     document.getElementById("btnAddEvlilik").disabled = true;
     if (selec.length === 0 || selec.length > 2) {
       document.getElementById("formDiv").classList.add("invisible");
@@ -929,7 +928,7 @@ export const Tree = ({ data, setData }) => {
       }
     }
     let tempObj = {
-      key: tempData.length,
+      key: tempData[tempData.length - 1].key + 1,
       n: "",
       s: "M",
       m: selectedPerson.m,
@@ -951,7 +950,7 @@ export const Tree = ({ data, setData }) => {
       }
     }
     let tempObj = {
-      key: tempData.length,
+      key: tempData[tempData.length - 1].key + 1,
       n: "",
       s: "F",
       m: selectedPerson.m,
@@ -975,52 +974,61 @@ export const Tree = ({ data, setData }) => {
     let tempObjM, tempObjF;
     if (selec.length === 2) {
       tempObjM = {
-        key: tempData.length,
+        key: tempData[tempData.length - 1].key + 1,
         n: "",
         s: "M",
-        ux: tempData.length + 1,
+        ux: tempData[tempData.length - 1].key + 2,
         a: [],
         color: "white",
         carry: false,
         cm: false,
       };
       tempObjF = {
-        key: tempData.length + 1,
+        key: tempData[tempData.length - 1].key + 2,
         n: "",
         s: "F",
-        vir: tempData.length,
+        vir: tempData[tempData.length - 1].key + 1,
         a: [],
         color: "white",
         carry: false,
         cm: false,
       };
-      tempData[selec[0].key].f = tempData.length;
-      tempData[selec[0].key].m = tempData.length + 1;
-      tempData[selec[1].key].f = tempData.length;
-      tempData[selec[1].key].m = tempData.length + 1;
+      for (let i = 0; i < tempData.length; i++) {
+        if (tempData[i].key == selec[0].key) {
+          tempData[i].f = tempObjM.key;
+          tempData[i].m = tempObjF.key;
+        } else if (tempData[i].key == selec[1].key) {
+          tempData[i].f = tempObjM.key;
+          tempData[i].m = tempObjF.key;
+        }
+      }
     } else {
       tempObjM = {
-        key: tempData.length,
+        key: tempData[tempData.length - 1].key + 1,
         n: "",
         s: "M",
-        ux: tempData.length + 1,
+        ux: tempData[tempData.length - 1].key + 2,
         a: [],
         color: "white",
         carry: false,
         cm: false,
       };
       tempObjF = {
-        key: tempData.length + 1,
+        key: tempData[tempData.length - 1].key + 2,
         n: "",
         s: "F",
-        vir: tempData.length,
+        vir: tempData[tempData.length - 1].key + 1,
         a: [],
         color: "white",
         carry: false,
         cm: false,
       };
-      tempData[selectedPerson.key].f = tempData.length;
-      tempData[selectedPerson.key].m = tempData.length + 1;
+      for (let i = 0; i < tempData.length; i++) {
+        if (tempData[i].key == selectedPerson.key) {
+          tempData[i].f = tempObjM.key;
+          tempData[i].m = tempObjF.key;
+        }
+      }
     }
     tempData.push(tempObjM);
     tempData.push(tempObjF);
@@ -1045,7 +1053,7 @@ export const Tree = ({ data, setData }) => {
       father = selectedPerson.key;
     }
     let tempObj = {
-      key: tempData.length,
+      key: tempData[tempData.length - 1].key + 1,
       n: "",
       s: "M",
       m: mother,
@@ -1075,7 +1083,7 @@ export const Tree = ({ data, setData }) => {
       father = selectedPerson.key;
     }
     let tempObj = {
-      key: tempData.length,
+      key: tempData[tempData.length - 1].key + 1,
       n: "",
       s: "F",
       m: mother,
@@ -1097,11 +1105,21 @@ export const Tree = ({ data, setData }) => {
       }
     }
     if (selec[0].s == "F") {
-      tempData[selec[0].key].vir = selec[1].key;
-      tempData[selec[1].key].ux = selec[0].key;
+      for (let i = 0; i < tempData.length; i++) {
+        if (tempData[i].key == selec[0].key) {
+          tempData[i].vir = selec[1].key;
+        } else if (tempData[i].key == selec[1].key) {
+          tempData[i].ux = selec[0].key;
+        }
+      }
     } else {
-      tempData[selec[0].key].ux = selec[1].key;
-      tempData[selec[1].key].vir = selec[0].key;
+      for (let i = 0; i < tempData.length; i++) {
+        if (tempData[i].key == selec[0].key) {
+          tempData[i].ux = selec[1].key;
+        } else if (tempData[i].key == selec[1].key) {
+          tempData[i].vir = selec[0].key;
+        }
+      }
     }
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
@@ -1116,7 +1134,7 @@ export const Tree = ({ data, setData }) => {
       }
     }
     let tempObj = {
-      key: tempData.length,
+      key: tempData[tempData.length - 1].key + 1,
       n: "",
       s: "F",
       a: [],
@@ -1136,7 +1154,7 @@ export const Tree = ({ data, setData }) => {
       }
     }
     let tempObj = {
-      key: tempData.length,
+      key: tempData[tempData.length - 1].key + 1,
       n: "",
       s: "M",
       a: [],
@@ -1155,35 +1173,39 @@ export const Tree = ({ data, setData }) => {
         tempData.push(data[i]);
       }
     }
-    tempData[selectedPerson.key].n = document.getElementById("txt").value;
-    if (document.getElementById("checkHasta").checked) {
-      tempData[selectedPerson.key].color = "black";
-    } else {
-      tempData[selectedPerson.key].color = "white";
-    }
-    if (document.getElementById("checkOlu").checked) {
-      tempData[selectedPerson.key].a = ["S"];
-    } else {
-      tempData[selectedPerson.key].a = [];
-    }
-    if (document.getElementById("checkTasiyici").checked) {
-      tempData[selectedPerson.key].carry = true;
-    } else {
-      tempData[selectedPerson.key].carry = false;
-    }
-    if (document.getElementById("checkAkraba").checked) {
-      temp[selectedPerson.key].cm = true;
-      if (selectedPerson.hasOwnProperty("vir")) {
-        temp[selectedPerson.vir].cm = true;
-      } else {
-        temp[selectedPerson.ux].cm = true;
-      }
-    } else if (selectedPerson.hasOwnProperty("cm")) {
-      temp[selectedPerson.key].cm = false;
-      if (selectedPerson.hasOwnProperty("vir")) {
-        temp[selectedPerson.vir].cm = false;
-      } else {
-        temp[selectedPerson.ux].cm = false;
+    for (let i = 0; i < tempData.length; i++) {
+      if (tempData[i].key == selectedPerson.key) {
+        tempData[i].n = document.getElementById("txt").value;
+        if (document.getElementById("checkHasta").checked) {
+          tempData[i].color = "black";
+        } else {
+          tempData[i].color = "white";
+        }
+        if (document.getElementById("checkOlu").checked) {
+          tempData[i].a = ["S"];
+        } else {
+          tempData[i].a = [];
+        }
+        if (document.getElementById("checkTasiyici").checked) {
+          tempData[i].carry = true;
+        } else {
+          tempData[i].carry = false;
+        }
+        if (document.getElementById("checkAkraba").checked) {
+          tempData[i].cm = true;
+          if (selectedPerson.hasOwnProperty("vir")) {
+            tempData[tempData[i].vir].cm = true;
+          } else {
+            tempData[tempData[i].ux].cm = true;
+          }
+        } else if (selectedPerson.hasOwnProperty("cm")) {
+          tempData[i].cm = false;
+          if (selectedPerson.hasOwnProperty("vir")) {
+            tempData[tempData[i].vir].cm = false;
+          } else {
+            tempData[tempData[i].ux].cm = false;
+          }
+        }
       }
     }
     setSelectedPerson({ n: "", null: true });
