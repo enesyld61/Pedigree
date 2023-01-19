@@ -1531,10 +1531,9 @@ export const Tree = ({ data, setData }) => {
           <Button
             variant="primary"
             onClick={() => {
-              // updateTemp(temp);
-              // setSelec([]);
-              // document.getElementById("formDiv").classList.add("invisible");
-              console.log(temp);
+              updateTemp(temp);
+              setSelected([]);
+              document.getElementById("formDiv").classList.add("invisible");
             }}
           >
             Yenile
