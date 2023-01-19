@@ -9,9 +9,8 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 export const Tree = ({ data, setData }) => {
-  const [selectedPerson, setSelectedPerson] = useState({ n: "", null: true });
   const [temp, setTemp] = useState([]);
-  const [selec, setSelec] = useState([]);
+  const [selected, setSelected] = useState([]);
   let myDiagram;
   useEffect(() => {
     updateTemp();
@@ -44,23 +43,16 @@ export const Tree = ({ data, setData }) => {
         columnSpacing: 10,
       }),
     });
+    myDiagram.allowDelete = false;
 
     const change = () => {
-      let flag = false;
-      let selectedTwo = [];
-      setSelec(0);
+      let arrSelect = [];
       for (let i = 0; i < data.length; i++) {
         if (myDiagram.findNodeForKey(data[i].key).isSelected) {
-          flag = true;
-          selectedTwo.push(data[i]);
+          arrSelect.push(data[i]);
         }
       }
-      setSelec(selectedTwo);
-      if (!flag) {
-        setSelectedPerson({ n: "", null: true });
-      } else {
-        setSelectedPerson(selectedTwo[0]);
-      }
+      setSelected(arrSelect);
     };
 
     myDiagram.addDiagramListener("ChangedSelection", change);
@@ -829,32 +821,35 @@ export const Tree = ({ data, setData }) => {
     const checkAkraba = document.getElementById("checkAkraba");
 
     // kimse seçili değilse
-    if (selec.length === 0) {
+    if (selected.length === 0) {
       formDiv.classList.add("invisible");
     }
     // 1 seçili kişi için
-    else if (selec.length === 1) {
+    else if (selected.length === 1) {
       formDiv.classList.remove("invisible");
       btnAddEvlilik.disabled = true;
       def.classList.remove("invisible");
       txt.classList.remove("invisible");
-      txt.value = selec[0].n;
-      if (selec[0].color === "black") {
+      txt.value = selected[0].n;
+      if (selected[0].color === "black") {
         checkHasta.checked = true;
       } else {
         checkHasta.checked = false;
       }
-      checkTasiyici.checked = selec[0].carry;
-      if (selec[0].a.includes("S")) {
+      checkTasiyici.checked = selected[0].carry;
+      if (selected[0].a.includes("S")) {
         checkOlu.checked = true;
       } else {
         checkOlu.checked = false;
       }
-      if (selec[0].hasOwnProperty("vir") || selec[0].hasOwnProperty("ux")) {
+      if (
+        selected[0].hasOwnProperty("vir") ||
+        selected[0].hasOwnProperty("ux")
+      ) {
         divAkraba.classList.remove("invisible");
         btnAddErkekCocuk.disabled = false;
         btnAddKizCocuk.disabled = false;
-        if (selec[0].hasOwnProperty("cm") && selec[0].cm) {
+        if (selected[0].hasOwnProperty("cm") && selected[0].cm) {
           checkAkraba.checked = true;
         } else {
           checkAkraba.checked = false;
@@ -864,7 +859,7 @@ export const Tree = ({ data, setData }) => {
         btnAddErkekCocuk.disabled = true;
         btnAddKizCocuk.disabled = true;
       }
-      if (selec[0].hasOwnProperty("m")) {
+      if (selected[0].hasOwnProperty("m")) {
         btnAddEbeveyn.disabled = true;
         btnAddErkek.disabled = false;
         btnAddKiz.disabled = false;
@@ -875,7 +870,7 @@ export const Tree = ({ data, setData }) => {
       }
     }
     // 2 seçili kişi için
-    else if (selec.length === 2) {
+    else if (selected.length === 2) {
       formDiv.classList.remove("invisible");
       def.classList.add("invisible");
       txt.classList.add("invisible");
@@ -884,16 +879,21 @@ export const Tree = ({ data, setData }) => {
       checkOlu.checked = false;
 
       //evliyseler
-      if (selec[0].hasOwnProperty("vir") || selec[0].hasOwnProperty("ux")) {
+      if (
+        selected[0].hasOwnProperty("vir") ||
+        selected[0].hasOwnProperty("ux")
+      ) {
         btnAddEvlilik.disabled = true;
 
         //birbirleriyle evliyseler
         if (
-          (selec[0].hasOwnProperty("vir") && selec[0].vir === selec[1].key) ||
-          (selec[0].hasOwnProperty("ux") && selec[0].ux === selec[1].key)
+          (selected[0].hasOwnProperty("vir") &&
+            selected[0].vir === selected[1].key) ||
+          (selected[0].hasOwnProperty("ux") &&
+            selected[0].ux === selected[1].key)
         ) {
           divAkraba.classList.remove("invisible");
-          if (selec[0].hasOwnProperty("cm") && selec[0].cm) {
+          if (selected[0].hasOwnProperty("cm") && selected[0].cm) {
             checkAkraba.checked = true;
           } else {
             checkAkraba.checked = false;
@@ -908,15 +908,18 @@ export const Tree = ({ data, setData }) => {
         else {
           btnAddErkekCocuk.disabled = true;
           btnAddKizCocuk.disabled = true;
-          if (selec[0].hasOwnProperty("m") || selec[1].hasOwnProperty("m")) {
+          if (
+            selected[0].hasOwnProperty("m") ||
+            selected[1].hasOwnProperty("m")
+          ) {
             btnAddEbeveyn.disabled = true;
           } else {
             btnAddEbeveyn.disabled = false;
           }
           if (
-            selec[0].hasOwnProperty("m") &&
-            selec[1].hasOwnProperty("m") &&
-            selec[0].m === selec[1].m
+            selected[0].hasOwnProperty("m") &&
+            selected[1].hasOwnProperty("m") &&
+            selected[0].m === selected[1].m
           ) {
             btnAddErkek.disabled = false;
             btnAddKiz.disabled = false;
@@ -930,25 +933,28 @@ export const Tree = ({ data, setData }) => {
       else {
         btnAddErkekCocuk.disabled = true;
         btnAddKizCocuk.disabled = true;
-        if (selec[0].hasOwnProperty("m") || selec[1].hasOwnProperty("m")) {
+        if (
+          selected[0].hasOwnProperty("m") ||
+          selected[1].hasOwnProperty("m")
+        ) {
           btnAddEbeveyn.disabled = true;
         } else {
           btnAddEbeveyn.disabled = false;
         }
         if (
-          (selec[0].hasOwnProperty("m") &&
-            selec[1].hasOwnProperty("m") &&
-            selec[0].m === selec[1].m) ||
-          selec[0].s === selec[1].s
+          (selected[0].hasOwnProperty("m") &&
+            selected[1].hasOwnProperty("m") &&
+            selected[0].m === selected[1].m) ||
+          selected[0].s === selected[1].s
         ) {
           btnAddEvlilik.disabled = true;
         } else {
           btnAddEvlilik.disabled = false;
         }
         if (
-          selec[0].hasOwnProperty("m") &&
-          selec[1].hasOwnProperty("m") &&
-          selec[0].m === selec[1].m
+          selected[0].hasOwnProperty("m") &&
+          selected[1].hasOwnProperty("m") &&
+          selected[0].m === selected[1].m
         ) {
           btnAddErkek.disabled = false;
           btnAddKiz.disabled = false;
@@ -973,20 +979,21 @@ export const Tree = ({ data, setData }) => {
       btnAddKizCocuk.disabled = true;
       let hasM = 0;
       let ms = [];
-      for (let i = 0; i < selec.length; i++) {
-        if (selec[i].hasOwnProperty("m")) {
+      for (let i = 0; i < selected.length; i++) {
+        if (selected[i].hasOwnProperty("m")) {
           hasM++;
-          ms.push(selec[i].m);
+          ms.push(selected[i].m);
         }
       }
       if (hasM === 0) {
         let married = false;
-        for (let i = 0; i < selec.length; i++) {
-          for (let j = i + 1; j < selec.length; j++) {
+        for (let i = 0; i < selected.length; i++) {
+          for (let j = i + 1; j < selected.length; j++) {
             if (
-              (selec[i].hasOwnProperty("vir") &&
-                selec[i].vir === selec[j].key) ||
-              (selec[i].hasOwnProperty("ux") && selec[i].ux === selec[j].key)
+              (selected[i].hasOwnProperty("vir") &&
+                selected[i].vir === selected[j].key) ||
+              (selected[i].hasOwnProperty("ux") &&
+                selected[i].ux === selected[j].key)
             ) {
               married = true;
             }
@@ -1006,7 +1013,7 @@ export const Tree = ({ data, setData }) => {
             same = false;
           }
         }
-        if (same && ms.length === selec.length) {
+        if (same && ms.length === selected.length) {
           btnAddErkek.disabled = false;
           btnAddKiz.disabled = false;
         } else {
@@ -1015,7 +1022,7 @@ export const Tree = ({ data, setData }) => {
         }
       }
     }
-  }, [selec]);
+  }, [selected]);
 
   const addErkekKardes = () => {
     let tempData = [];
@@ -1028,15 +1035,15 @@ export const Tree = ({ data, setData }) => {
       key: tempData[tempData.length - 1].key + 1,
       n: "",
       s: "M",
-      m: selectedPerson.m,
-      f: selectedPerson.f,
+      m: selected[0].m,
+      f: selected[0].f,
       a: [],
       color: "white",
     };
     tempData.push(tempObj);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelec([]);
+    setSelected([]);
   };
 
   const addKizKardes = () => {
@@ -1050,15 +1057,15 @@ export const Tree = ({ data, setData }) => {
       key: tempData[tempData.length - 1].key + 1,
       n: "",
       s: "F",
-      m: selectedPerson.m,
-      f: selectedPerson.f,
+      m: selected[0].m,
+      f: selected[0].f,
       a: [],
       color: "white",
     };
     tempData.push(tempObj);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
   };
 
   const addEbeveyn = () => {
@@ -1069,7 +1076,7 @@ export const Tree = ({ data, setData }) => {
       }
     }
     let tempObjM, tempObjF;
-    if (selec.length === 2) {
+    if (selected.length === 2) {
       tempObjM = {
         key: tempData[tempData.length - 1].key + 1,
         n: "",
@@ -1091,10 +1098,10 @@ export const Tree = ({ data, setData }) => {
         cm: false,
       };
       for (let i = 0; i < tempData.length; i++) {
-        if (tempData[i].key == selec[0].key) {
+        if (tempData[i].key == selected[0].key) {
           tempData[i].f = tempObjM.key;
           tempData[i].m = tempObjF.key;
-        } else if (tempData[i].key == selec[1].key) {
+        } else if (tempData[i].key == selected[1].key) {
           tempData[i].f = tempObjM.key;
           tempData[i].m = tempObjF.key;
         }
@@ -1121,7 +1128,7 @@ export const Tree = ({ data, setData }) => {
         cm: false,
       };
       for (let i = 0; i < tempData.length; i++) {
-        if (tempData[i].key == selectedPerson.key) {
+        if (tempData[i].key == selected[0].key) {
           tempData[i].f = tempObjM.key;
           tempData[i].m = tempObjF.key;
         }
@@ -1131,7 +1138,7 @@ export const Tree = ({ data, setData }) => {
     tempData.push(tempObjF);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
   };
 
   const addErkekCocuk = () => {
@@ -1142,12 +1149,12 @@ export const Tree = ({ data, setData }) => {
       }
     }
     let mother, father;
-    if (selectedPerson.s == "F") {
-      mother = selectedPerson.key;
-      father = selectedPerson.vir;
+    if (selected[0].s == "F") {
+      mother = selected[0].key;
+      father = selected[0].vir;
     } else {
-      mother = selectedPerson.ux;
-      father = selectedPerson.key;
+      mother = selected[0].ux;
+      father = selected[0].key;
     }
     let tempObj = {
       key: tempData[tempData.length - 1].key + 1,
@@ -1161,7 +1168,7 @@ export const Tree = ({ data, setData }) => {
     tempData.push(tempObj);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
   };
 
   const addKizCocuk = () => {
@@ -1172,12 +1179,12 @@ export const Tree = ({ data, setData }) => {
       }
     }
     let mother, father;
-    if (selectedPerson.s == "F") {
-      mother = selectedPerson.key;
-      father = selectedPerson.vir;
+    if (selected[0].s == "F") {
+      mother = selected[0].key;
+      father = selected[0].vir;
     } else {
-      mother = selectedPerson.ux;
-      father = selectedPerson.key;
+      mother = selected[0].ux;
+      father = selected[0].key;
     }
     let tempObj = {
       key: tempData[tempData.length - 1].key + 1,
@@ -1191,7 +1198,7 @@ export const Tree = ({ data, setData }) => {
     tempData.push(tempObj);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
   };
 
   const addEvlilik = () => {
@@ -1201,26 +1208,26 @@ export const Tree = ({ data, setData }) => {
         tempData.push(data[i]);
       }
     }
-    if (selec[0].s == "F") {
+    if (selected[0].s == "F") {
       for (let i = 0; i < tempData.length; i++) {
-        if (tempData[i].key == selec[0].key) {
-          tempData[i].vir = selec[1].key;
-        } else if (tempData[i].key == selec[1].key) {
-          tempData[i].ux = selec[0].key;
+        if (tempData[i].key == selected[0].key) {
+          tempData[i].vir = selected[1].key;
+        } else if (tempData[i].key == selected[1].key) {
+          tempData[i].ux = selected[0].key;
         }
       }
     } else {
       for (let i = 0; i < tempData.length; i++) {
-        if (tempData[i].key == selec[0].key) {
-          tempData[i].ux = selec[1].key;
-        } else if (tempData[i].key == selec[1].key) {
-          tempData[i].vir = selec[0].key;
+        if (tempData[i].key == selected[0].key) {
+          tempData[i].ux = selected[1].key;
+        } else if (tempData[i].key == selected[1].key) {
+          tempData[i].vir = selected[0].key;
         }
       }
     }
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
   };
 
   const addYeniKisiKadin = () => {
@@ -1240,7 +1247,7 @@ export const Tree = ({ data, setData }) => {
     tempData.push(tempObj);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
   };
 
   const addYeniKisiErkek = () => {
@@ -1260,7 +1267,7 @@ export const Tree = ({ data, setData }) => {
     tempData.push(tempObj);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
   };
 
   const personalSave = () => {
@@ -1277,8 +1284,8 @@ export const Tree = ({ data, setData }) => {
     const checkTasiyici = document.getElementById("checkTasiyici");
     const checkAkraba = document.getElementById("checkAkraba");
 
-    if (selec.length === 1) {
-      let index = tempData.indexOf(selec[0]);
+    if (selected.length === 1) {
+      let index = tempData.indexOf(selected[0]);
       tempData[index].n = txt.value;
       if (checkOlu.checked) {
         tempData[index].a = ["S"];
@@ -1295,15 +1302,19 @@ export const Tree = ({ data, setData }) => {
       } else {
         tempData[index].carry = false;
       }
-      if (selec[0].hasOwnProperty("vir") || selec[0].hasOwnProperty("ux")) {
+      if (
+        selected[0].hasOwnProperty("vir") ||
+        selected[0].hasOwnProperty("ux")
+      ) {
         let index2;
         for (let i = 0; i < tempData.length; i++) {
           if (
-            (selec[0].hasOwnProperty("vir") &&
-              tempData[i].key === selec[0].vir) ||
-            (selec[0].hasOwnProperty("ux") && tempData[i].key === selec[0].ux)
+            (selected[0].hasOwnProperty("vir") &&
+              tempData[i].key === selected[0].vir) ||
+            (selected[0].hasOwnProperty("ux") &&
+              tempData[i].key === selected[0].ux)
           ) {
-            index2 = tempData[i].key;
+            index2 = i;
           }
         }
         if (checkAkraba.checked) {
@@ -1316,8 +1327,8 @@ export const Tree = ({ data, setData }) => {
       }
     } else {
       let indexes = [];
-      for (let i = 0; i < selec.length; i++) {
-        indexes.push(tempData.indexOf(selec[i]));
+      for (let i = 0; i < selected.length; i++) {
+        indexes.push(tempData.indexOf(selected[i]));
       }
       if (checkOlu.checked) {
         for (let i = 0; i < indexes.length; i++) {
@@ -1347,10 +1358,10 @@ export const Tree = ({ data, setData }) => {
         }
       }
       if (
-        (selec.length == 2 &&
-          selec[0].hasOwnProperty("vir") &&
-          selec[0].vir === selec[1].key) ||
-        (selec[0].hasOwnProperty("ux") && selec[0].ux === selec[1].key)
+        (selected.length == 2 &&
+          selected[0].hasOwnProperty("vir") &&
+          selected[0].vir === selected[1].key) ||
+        (selected[0].hasOwnProperty("ux") && selected[0].ux === selected[1].key)
       ) {
         if (checkAkraba.checked) {
           tempData[indexes[0]].cm = true;
@@ -1362,44 +1373,7 @@ export const Tree = ({ data, setData }) => {
       }
     }
 
-    /*
-    for (let i = 0; i < tempData.length; i++) {
-      if (tempData[i].key == selectedPerson.key) {
-        tempData[i].n = document.getElementById("txt").value;
-        if (document.getElementById("checkHasta").checked) {
-          tempData[i].color = "black";
-        } else {
-          tempData[i].color = "white";
-        }
-        if (document.getElementById("checkOlu").checked) {
-          tempData[i].a = ["S"];
-        } else {
-          tempData[i].a = [];
-        }
-        if (document.getElementById("checkTasiyici").checked) {
-          tempData[i].carry = true;
-        } else {
-          tempData[i].carry = false;
-        }
-        if (document.getElementById("checkAkraba").checked) {
-          tempData[i].cm = true;
-          if (selectedPerson.hasOwnProperty("vir")) {
-            tempData[tempData[i].vir].cm = true;
-          } else {
-            tempData[tempData[i].ux].cm = true;
-          }
-        } else if (selectedPerson.hasOwnProperty("cm")) {
-          tempData[i].cm = false;
-          if (selectedPerson.hasOwnProperty("vir")) {
-            tempData[tempData[i].vir].cm = false;
-          } else {
-            tempData[tempData[i].ux].cm = false;
-          }
-        }
-      }
-    }*/
-    setSelectedPerson({ n: "", null: true });
-    setSelec([]);
+    setSelected([]);
     setTemp(tempData);
   };
 
@@ -1424,7 +1398,7 @@ export const Tree = ({ data, setData }) => {
     }
     link.click();
     updateTemp(temp);
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
     document.getElementById("formDiv").classList.add("invisible");
   };
 
@@ -1443,52 +1417,106 @@ export const Tree = ({ data, setData }) => {
 
   const kisiyiSil = () => {
     let tempData = [];
-    for (let i = 0; i < data.length; i++) {
-      if (data[i].hasOwnProperty("n")) {
-        if (data[i].key !== selectedPerson.key) {
-          tempData.push(data[i]);
+
+    if (selected.length === 1) {
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].hasOwnProperty("n")) {
+          if (data[i].key !== selected[0].key) {
+            tempData.push(data[i]);
+          }
         }
       }
-    }
-    if (selectedPerson.s == "F") {
-      for (let i = 0; i < tempData.length; i++) {
-        if (
-          tempData[i].hasOwnProperty("m") &&
-          tempData[i].m == selectedPerson.key
-        ) {
-          delete tempData[i].m;
-          delete tempData[i].f;
+      if (selected[0].s == "F") {
+        for (let i = 0; i < tempData.length; i++) {
+          if (
+            tempData[i].hasOwnProperty("m") &&
+            tempData[i].m == selected[0].key
+          ) {
+            delete tempData[i].m;
+            delete tempData[i].f;
+          }
+          if (
+            tempData[i].hasOwnProperty("ux") &&
+            tempData[i].ux == selected[0].key
+          ) {
+            delete tempData[i].ux;
+            delete tempData[i].cm;
+          }
         }
-        if (
-          tempData[i].hasOwnProperty("ux") &&
-          tempData[i].ux == selectedPerson.key
-        ) {
-          delete tempData[i].ux;
-          delete tempData[i].cm;
+      } else {
+        for (let i = 0; i < tempData.length; i++) {
+          if (
+            tempData[i].hasOwnProperty("f") &&
+            tempData[i].f == selected[0].key
+          ) {
+            delete tempData[i].f;
+            delete tempData[i].m;
+          }
+          if (
+            tempData[i].hasOwnProperty("vir") &&
+            tempData[i].vir == selected[0].key
+          ) {
+            delete tempData[i].vir;
+            delete tempData[i].cm;
+          }
         }
       }
     } else {
-      for (let i = 0; i < tempData.length; i++) {
-        if (
-          tempData[i].hasOwnProperty("f") &&
-          tempData[i].f == selectedPerson.key
-        ) {
-          delete tempData[i].f;
-          delete tempData[i].m;
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].hasOwnProperty("n")) {
+          let same = false;
+          for (let j = 0; j < selected.length; j++) {
+            if (data[i].key === selected[j].key) {
+              same = true;
+            }
+          }
+          if (!same) {
+            tempData.push(data[i]);
+          }
         }
-        if (
-          tempData[i].hasOwnProperty("vir") &&
-          tempData[i].vir == selectedPerson.key
-        ) {
-          delete tempData[i].vir;
-          delete tempData[i].cm;
+      }
+      for (let j = 0; j < selected.length; j++) {
+        if (selected[j].s == "F") {
+          for (let i = 0; i < tempData.length; i++) {
+            if (
+              tempData[i].hasOwnProperty("m") &&
+              tempData[i].m == selected[j].key
+            ) {
+              delete tempData[i].m;
+              delete tempData[i].f;
+            }
+            if (
+              tempData[i].hasOwnProperty("ux") &&
+              tempData[i].ux == selected[j].key
+            ) {
+              delete tempData[i].ux;
+              delete tempData[i].cm;
+            }
+          }
+        } else {
+          for (let i = 0; i < tempData.length; i++) {
+            if (
+              tempData[i].hasOwnProperty("f") &&
+              tempData[i].f == selected[j].key
+            ) {
+              delete tempData[i].f;
+              delete tempData[i].m;
+            }
+            if (
+              tempData[i].hasOwnProperty("vir") &&
+              tempData[i].vir == selected[j].key
+            ) {
+              delete tempData[i].vir;
+              delete tempData[i].cm;
+            }
+          }
         }
       }
     }
 
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelected([]);
   };
 
   return (
@@ -1503,9 +1531,10 @@ export const Tree = ({ data, setData }) => {
           <Button
             variant="primary"
             onClick={() => {
-              updateTemp(temp);
-              setSelectedPerson({ n: "", null: true });
-              document.getElementById("formDiv").classList.add("invisible");
+              // updateTemp(temp);
+              // setSelec([]);
+              // document.getElementById("formDiv").classList.add("invisible");
+              console.log(temp);
             }}
           >
             Yenile

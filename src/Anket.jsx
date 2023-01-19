@@ -92,12 +92,12 @@ export const Anket = ({ setData }) => {
       },
       {
         key: 6,
-        n: "Hasta",
+        n: "↑\nHasta",
         s: cinsiyet,
         m: 5,
         f: 4,
         a: [],
-        color: "black",
+        color: "white",
         carry: false,
       },
     ];
