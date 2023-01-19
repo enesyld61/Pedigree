@@ -813,111 +813,207 @@ export const Tree = ({ data, setData }) => {
   }, [data]);
 
   useEffect(() => {
-    document.getElementById("btnAddEvlilik").disabled = true;
-    if (selec.length === 0 || selec.length > 2) {
-      document.getElementById("formDiv").classList.add("invisible");
-    } else if (selec.length <= 2) {
-      document.getElementById("formDiv").classList.remove("invisible");
-      if (selec.length === 2) {
-        if (
-          selec[0].s !== selec[1].s &&
-          !(selec[0].hasOwnProperty("vir") || selec[0].hasOwnProperty("ux")) &&
-          !(selec[0].hasOwnProperty("ux") || selec[1].hasOwnProperty("vir")) &&
-          !(
-            (selec[0].hasOwnProperty("m") &&
-              selec[1].hasOwnProperty("m") &&
-              selec[0].m === selec[1].m) ||
-            (selec[0].hasOwnProperty("f") &&
-              selec[1].hasOwnProperty("f") &&
-              selec[0].f === selec[1].f)
-          )
-        ) {
-          document.getElementById("formDiv").classList.remove("invisible");
-          document.getElementById("btnAddEvlilik").disabled = false;
-        }
-        if (
-          (selec[0].hasOwnProperty("vir") && selec[0].vir == selec[1].key) ||
-          (selec[0].hasOwnProperty("ux") && selec[0].ux == selec[1].key) ||
-          selec[0].hasOwnProperty("m") ||
-          selec[1].hasOwnProperty("m")
-        ) {
-          document.getElementById("btnAddEbeveyn").disabled = true;
-        } else {
-          document.getElementById("btnAddEbeveyn").disabled = false;
-        }
-        if (
-          (selec[0].hasOwnProperty("vir") && selec[0].vir == selec[1].key) ||
-          (selec[0].hasOwnProperty("ux") && selec[0].ux == selec[1].key)
-        ) {
-          document.getElementById("btnAddErkekCocuk").disabled = false;
-          document.getElementById("btnAddKizCocuk").disabled = false;
-        } else {
-          document.getElementById("btnAddErkekCocuk").disabled = true;
-          document.getElementById("btnAddKizCocuk").disabled = true;
-        }
-        if (
-          selec[0].hasOwnProperty("m") &&
-          selec[0].hasOwnProperty("m") &&
-          selec[0].m == selec[1].m
-        ) {
-          document.getElementById("btnAddErkek").disabled = false;
-          document.getElementById("btnAddKiz").disabled = false;
-        } else {
-          document.getElementById("btnAddErkek").disabled = true;
-          document.getElementById("btnAddKiz").disabled = true;
-        }
-        document.getElementById("colDefinition").classList.add("invisible");
-        document.getElementById("colCheck").classList.add("invisible");
+    const formDiv = document.getElementById("formDiv");
+    const btnAddEvlilik = document.getElementById("btnAddEvlilik");
+    const btnAddEbeveyn = document.getElementById("btnAddEbeveyn");
+    const btnAddErkekCocuk = document.getElementById("btnAddErkekCocuk");
+    const btnAddKizCocuk = document.getElementById("btnAddKizCocuk");
+    const btnAddErkek = document.getElementById("btnAddErkek");
+    const btnAddKiz = document.getElementById("btnAddKiz");
+    const def = document.getElementById("def");
+    const txt = document.getElementById("txt");
+    const checkOlu = document.getElementById("checkOlu");
+    const checkHasta = document.getElementById("checkHasta");
+    const checkTasiyici = document.getElementById("checkTasiyici");
+    const divAkraba = document.getElementById("divAkraba");
+    const checkAkraba = document.getElementById("checkAkraba");
+
+    // kimse seçili değilse
+    if (selec.length === 0) {
+      formDiv.classList.add("invisible");
+    }
+    // 1 seçili kişi için
+    else if (selec.length === 1) {
+      formDiv.classList.remove("invisible");
+      btnAddEvlilik.disabled = true;
+      def.classList.remove("invisible");
+      txt.classList.remove("invisible");
+      txt.value = selec[0].n;
+      if (selec[0].color === "black") {
+        checkHasta.checked = true;
       } else {
-        document.getElementById("colDefinition").classList.remove("invisible");
-        document.getElementById("colCheck").classList.remove("invisible");
-        document.getElementById("txt").value = selectedPerson.n;
-        if (selectedPerson.a.includes("S")) {
-          document.getElementById("checkOlu").checked = true;
+        checkHasta.checked = false;
+      }
+      checkTasiyici.checked = selec[0].carry;
+      if (selec[0].a.includes("S")) {
+        checkOlu.checked = true;
+      } else {
+        checkOlu.checked = false;
+      }
+      if (selec[0].hasOwnProperty("vir") || selec[0].hasOwnProperty("ux")) {
+        divAkraba.classList.remove("invisible");
+        btnAddErkekCocuk.disabled = false;
+        btnAddKizCocuk.disabled = false;
+        if (selec[0].hasOwnProperty("cm") && selec[0].cm) {
+          checkAkraba.checked = true;
         } else {
-          document.getElementById("checkOlu").checked = false;
+          checkAkraba.checked = false;
         }
-        if (selectedPerson.color == "black") {
-          document.getElementById("checkHasta").checked = true;
-        } else {
-          document.getElementById("checkHasta").checked = false;
+      } else {
+        divAkraba.classList.add("invisible");
+        btnAddErkekCocuk.disabled = true;
+        btnAddKizCocuk.disabled = true;
+      }
+      if (selec[0].hasOwnProperty("m")) {
+        btnAddEbeveyn.disabled = true;
+        btnAddErkek.disabled = false;
+        btnAddKiz.disabled = false;
+      } else {
+        btnAddEbeveyn.disabled = false;
+        btnAddErkek.disabled = true;
+        btnAddKiz.disabled = true;
+      }
+    }
+    // 2 seçili kişi için
+    else if (selec.length === 2) {
+      formDiv.classList.remove("invisible");
+      def.classList.add("invisible");
+      txt.classList.add("invisible");
+      checkHasta.checked = false;
+      checkTasiyici.checked = false;
+      checkOlu.checked = false;
+
+      //evliyseler
+      if (selec[0].hasOwnProperty("vir") || selec[0].hasOwnProperty("ux")) {
+        btnAddEvlilik.disabled = true;
+
+        //birbirleriyle evliyseler
+        if (
+          (selec[0].hasOwnProperty("vir") && selec[0].vir === selec[1].key) ||
+          (selec[0].hasOwnProperty("ux") && selec[0].ux === selec[1].key)
+        ) {
+          divAkraba.classList.remove("invisible");
+          if (selec[0].hasOwnProperty("cm") && selec[0].cm) {
+            checkAkraba.checked = true;
+          } else {
+            checkAkraba.checked = false;
+          }
+          btnAddErkekCocuk.disabled = false;
+          btnAddKizCocuk.disabled = false;
+          btnAddEbeveyn.disabled = true;
+          btnAddErkek.disabled = true;
+          btnAddKiz.disabled = true;
         }
-        if (selectedPerson.carry) {
-          document.getElementById("checkTasiyici").checked = true;
+        //başkasıyla evliyseler
+        else {
+          btnAddErkekCocuk.disabled = true;
+          btnAddKizCocuk.disabled = true;
+          if (selec[0].hasOwnProperty("m") || selec[1].hasOwnProperty("m")) {
+            btnAddEbeveyn.disabled = true;
+          } else {
+            btnAddEbeveyn.disabled = false;
+          }
+          if (
+            selec[0].hasOwnProperty("m") &&
+            selec[1].hasOwnProperty("m") &&
+            selec[0].m === selec[1].m
+          ) {
+            btnAddErkek.disabled = false;
+            btnAddKiz.disabled = false;
+          } else {
+            btnAddErkek.disabled = true;
+            btnAddKiz.disabled = true;
+          }
+        }
+      }
+      //evli değilseler
+      else {
+        btnAddErkekCocuk.disabled = true;
+        btnAddKizCocuk.disabled = true;
+        if (selec[0].hasOwnProperty("m") || selec[1].hasOwnProperty("m")) {
+          btnAddEbeveyn.disabled = true;
         } else {
-          document.getElementById("checkTasiyici").checked = false;
+          btnAddEbeveyn.disabled = false;
         }
         if (
-          selectedPerson.hasOwnProperty("m") &&
-          selectedPerson.hasOwnProperty("f")
+          (selec[0].hasOwnProperty("m") &&
+            selec[1].hasOwnProperty("m") &&
+            selec[0].m === selec[1].m) ||
+          selec[0].s === selec[1].s
         ) {
-          document.getElementById("btnAddErkek").disabled = false;
-          document.getElementById("btnAddKiz").disabled = false;
-          document.getElementById("btnAddEbeveyn").disabled = true;
+          btnAddEvlilik.disabled = true;
         } else {
-          document.getElementById("btnAddErkek").disabled = true;
-          document.getElementById("btnAddKiz").disabled = true;
-          document.getElementById("btnAddEbeveyn").disabled = false;
+          btnAddEvlilik.disabled = false;
         }
-        document.getElementById("divAkraba").classList.remove("invisible");
-        if (selectedPerson.hasOwnProperty("cm") && selectedPerson.cm) {
-          document.getElementById("checkAkraba").checked = true;
-        } else if (
-          selectedPerson.hasOwnProperty("vir") ||
-          selectedPerson.hasOwnProperty("ux")
+        if (
+          selec[0].hasOwnProperty("m") &&
+          selec[1].hasOwnProperty("m") &&
+          selec[0].m === selec[1].m
         ) {
-          document.getElementById("checkAkraba").checked = false;
-          document.getElementById("btnAddErkekCocuk").disabled = false;
-          document.getElementById("btnAddKizCocuk").disabled = false;
+          btnAddErkek.disabled = false;
+          btnAddKiz.disabled = false;
         } else {
-          document.getElementById("checkAkraba").checked = false;
-          document.getElementById("btnAddErkekCocuk").disabled = true;
-          document.getElementById("btnAddKizCocuk").disabled = true;
-          document.getElementById("divAkraba").classList.add("invisible");
+          btnAddErkek.disabled = true;
+          btnAddKiz.disabled = true;
         }
       }
     }
-    if (selec.length === 2) {
+
+    // 2'den fazla seçili kişi için
+    else {
+      formDiv.classList.remove("invisible");
+      def.classList.add("invisible");
+      txt.classList.add("invisible");
+      checkHasta.checked = false;
+      checkTasiyici.checked = false;
+      checkOlu.checked = false;
+      divAkraba.classList.add("invisible");
+      btnAddEvlilik.disabled = true;
+      btnAddErkekCocuk.disabled = true;
+      btnAddKizCocuk.disabled = true;
+      let hasM = 0;
+      let ms = [];
+      for (let i = 0; i < selec.length; i++) {
+        if (selec[i].hasOwnProperty("m")) {
+          hasM++;
+          ms.push(selec[i].m);
+        }
+      }
+      if (hasM === 0) {
+        let married = false;
+        for (let i = 0; i < selec.length; i++) {
+          for (let j = i + 1; j < selec.length; j++) {
+            if (
+              (selec[i].hasOwnProperty("vir") &&
+                selec[i].vir === selec[j].key) ||
+              (selec[i].hasOwnProperty("ux") && selec[i].ux === selec[j].key)
+            ) {
+              married = true;
+            }
+          }
+        }
+
+        if (married === false) {
+          btnAddEbeveyn.disabled = false;
+        } else {
+          btnAddEbeveyn.disabled = true;
+        }
+      } else {
+        btnAddEbeveyn.disabled = true;
+        let same = true;
+        for (let i = 1; i < ms.length; i++) {
+          if (ms[0] !== ms[i]) {
+            same = false;
+          }
+        }
+        if (same && ms.length === selec.length) {
+          btnAddErkek.disabled = false;
+          btnAddKiz.disabled = false;
+        } else {
+          btnAddErkek.disabled = true;
+          btnAddKiz.disabled = true;
+        }
+      }
     }
   }, [selec]);
 
@@ -940,7 +1036,7 @@ export const Tree = ({ data, setData }) => {
     tempData.push(tempObj);
     setTemp(tempData);
     document.getElementById("formDiv").classList.add("invisible");
-    setSelectedPerson({ n: "", null: true });
+    setSelec([]);
   };
 
   const addKizKardes = () => {
@@ -1174,6 +1270,99 @@ export const Tree = ({ data, setData }) => {
         tempData.push(data[i]);
       }
     }
+
+    const txt = document.getElementById("txt");
+    const checkOlu = document.getElementById("checkOlu");
+    const checkHasta = document.getElementById("checkHasta");
+    const checkTasiyici = document.getElementById("checkTasiyici");
+    const checkAkraba = document.getElementById("checkAkraba");
+
+    if (selec.length === 1) {
+      let index = tempData.indexOf(selec[0]);
+      tempData[index].n = txt.value;
+      if (checkOlu.checked) {
+        tempData[index].a = ["S"];
+      } else {
+        tempData[index].a = [];
+      }
+      if (checkHasta.checked) {
+        tempData[index].color = "black";
+      } else {
+        tempData[index].color = "white";
+      }
+      if (checkTasiyici.checked) {
+        tempData[index].carry = true;
+      } else {
+        tempData[index].carry = false;
+      }
+      if (selec[0].hasOwnProperty("vir") || selec[0].hasOwnProperty("ux")) {
+        let index2;
+        for (let i = 0; i < tempData.length; i++) {
+          if (
+            (selec[0].hasOwnProperty("vir") &&
+              tempData[i].key === selec[0].vir) ||
+            (selec[0].hasOwnProperty("ux") && tempData[i].key === selec[0].ux)
+          ) {
+            index2 = tempData[i].key;
+          }
+        }
+        if (checkAkraba.checked) {
+          tempData[index].cm = true;
+          tempData[index2].cm = true;
+        } else {
+          tempData[index].cm = false;
+          tempData[index2].cm = false;
+        }
+      }
+    } else {
+      let indexes = [];
+      for (let i = 0; i < selec.length; i++) {
+        indexes.push(tempData.indexOf(selec[i]));
+      }
+      if (checkOlu.checked) {
+        for (let i = 0; i < indexes.length; i++) {
+          tempData[indexes[i]].a = "S";
+        }
+      } else {
+        for (let i = 0; i < indexes.length; i++) {
+          tempData[indexes[i]].a = [];
+        }
+      }
+      if (checkHasta.checked) {
+        for (let i = 0; i < indexes.length; i++) {
+          tempData[indexes[i]].color = "black";
+        }
+      } else {
+        for (let i = 0; i < indexes.length; i++) {
+          tempData[indexes[i]].color = "white";
+        }
+      }
+      if (checkTasiyici.checked) {
+        for (let i = 0; i < indexes.length; i++) {
+          tempData[indexes[i]].carry = true;
+        }
+      } else {
+        for (let i = 0; i < indexes.length; i++) {
+          tempData[indexes[i]].carry = false;
+        }
+      }
+      if (
+        (selec.length == 2 &&
+          selec[0].hasOwnProperty("vir") &&
+          selec[0].vir === selec[1].key) ||
+        (selec[0].hasOwnProperty("ux") && selec[0].ux === selec[1].key)
+      ) {
+        if (checkAkraba.checked) {
+          tempData[indexes[0]].cm = true;
+          tempData[indexes[1]].cm = true;
+        } else {
+          tempData[indexes[0]].cm = false;
+          tempData[indexes[1]].cm = false;
+        }
+      }
+    }
+
+    /*
     for (let i = 0; i < tempData.length; i++) {
       if (tempData[i].key == selectedPerson.key) {
         tempData[i].n = document.getElementById("txt").value;
@@ -1208,7 +1397,7 @@ export const Tree = ({ data, setData }) => {
           }
         }
       }
-    }
+    }*/
     setSelectedPerson({ n: "", null: true });
     setSelec([]);
     setTemp(tempData);
@@ -1377,7 +1566,9 @@ export const Tree = ({ data, setData }) => {
             </Row>
           </Col>
           <Col xs="4" id="colDefinition" className="colDef">
-            <Form.Label htmlFor="txt">Açıklama</Form.Label>
+            <Form.Label id="def" htmlFor="txt">
+              Açıklama
+            </Form.Label>
             <Form.Control id="txt" as="textarea" rows={3} />
             <Button id="btnSave" variant="primary" onClick={personalSave}>
               Kaydet
