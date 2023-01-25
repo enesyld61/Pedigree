@@ -34,7 +34,7 @@ export const Tree = ({ data, setData }) => {
         go.Adornment,
         "Auto",
         { layerName: "Grid" },
-        $(go.Shape, "Circle", { fill: "#c1cee3", stroke: null }),
+        $(go.Shape, "Circle", { fill: "yellow", stroke: null }),
         $(go.Placeholder, { margin: 2 })
       ),
       layout: $(GenogramLayout, {
@@ -1519,6 +1519,10 @@ export const Tree = ({ data, setData }) => {
     setSelected([]);
   };
 
+  const click = () => {
+    console.log(go.Panel.itemArray);
+  };
+
   return (
     <div id="allSampleContent" className="p-4 w-full">
       <Row>
@@ -1538,6 +1542,7 @@ export const Tree = ({ data, setData }) => {
           >
             Yenile
           </Button>
+          <Button onClick={click}>Button</Button>
         </Col>
         <Col xs="2">
           <InputGroup className="mb-3" id="inputPdf">
