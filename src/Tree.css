@@ -22,7 +22,7 @@
   justify-content: center;
 }
 
-.colDef {
+#colCheck {
   border-right: 1px solid rgba(0, 0, 0, 0.2);
 }
 .addBtn {
@@ -31,6 +31,7 @@
 
 #formDiv {
   text-align: center;
+  width: 100%;
 }
 
 #inputKaydet {
@@ -39,6 +40,19 @@
   margin-right: 0px;
 }
 
+#colBtns {
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+}
+
 #colYenile {
   text-align: center;
+}
+
+#btnsDiv {
+  width: 33%;
+  height: 500px;
+  text-align: center;
+  padding-top: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
 }

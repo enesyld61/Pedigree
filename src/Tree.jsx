@@ -243,6 +243,55 @@ export const Tree = ({ data, setData }) => {
     );
 
     myDiagram.nodeTemplateMap.add(
+      "D", // düşük
+      $(
+        go.Node,
+        "Vertical",
+        {
+          locationSpot: go.Spot.Center,
+          locationObjectName: "ICON",
+          selectionObjectName: "ICON",
+        },
+        new go.Binding("opacity", "hide", (h) => (h ? 0 : 1)),
+        new go.Binding("pickable", "hide", (h) => !h),
+
+        $(
+          go.Panel,
+          { name: "ICON" },
+          $(
+            go.Shape,
+            "Circle",
+            {
+              width: 10,
+              height: 10,
+              strokeWidth: 2,
+              fill: "black",
+              stroke: "#000000",
+              portId: "",
+            },
+            new go.Binding("fill", "black")
+          ),
+          $(
+            go.Panel,
+            {
+              margin: 1,
+            },
+            new go.Binding("itemArray", "a")
+          )
+        ),
+        $(
+          go.TextBlock,
+          {
+            font: "16px sans-serif",
+            textAlign: "center",
+            maxSize: new go.Size(80, NaN),
+          },
+          new go.Binding("text", "n")
+        )
+      )
+    );
+
+    myDiagram.nodeTemplateMap.add(
       "F", // female
       $(
         go.Node,
@@ -325,6 +374,20 @@ export const Tree = ({ data, setData }) => {
 
     myDiagram.linkTemplate = // for parent-child relationships
       $(
+        ParentChildLink, // custom routing for same birth siblings
+        {
+          routing: go.Link.Orthogonal,
+          curviness: 10,
+          layerName: "Background",
+          selectable: false,
+          fromSpot: go.Spot.Bottom,
+          toSpot: go.Spot.Top,
+        },
+        $(go.Shape, { strokeWidth: 2 })
+      );
+    /*
+    myDiagram.linkTemplate = // for parent-child relationships
+      $(
         go.Link,
         {
           routing: go.Link.Orthogonal,
@@ -334,6 +397,7 @@ export const Tree = ({ data, setData }) => {
         },
         $(go.Shape, { stroke: "#424242", strokeWidth: 2 })
       );
+*/
 
     myDiagram.linkTemplateMap.add(
       "Marriage", // for marriage relationships
@@ -355,7 +419,30 @@ export const Tree = ({ data, setData }) => {
             visible: false,
           },
           new go.Binding("visible", "cm")
+        ),
+        //boşanmış evlilik için
+        $(
+          go.Shape,
+          "MinusLine",
+          {
+            width: 20,
+            height: 20,
+            position: new go.Point(16.5, 16.5),
+            visible: false,
+            angle: -60,
+            scale: 2,
+          },
+          new go.Binding("visible", "bosanmis")
         )
+      )
+    );
+
+    myDiagram.linkTemplateMap.add(
+      "Identical", // for connecting twins/triplets
+      $(
+        go.Link,
+        { selectable: false, isTreeLink: false, isLayoutPositioned: false },
+        $(go.Shape, { strokeWidth: 2, stroke: "blue" })
       )
     );
 
@@ -377,6 +464,7 @@ export const Tree = ({ data, setData }) => {
     });
     setupMarriages(diagram);
     setupParents(diagram);
+    setupIdenticalTwins(diagram);
   }
 
   function findMarriage(diagram, a, b) {
@@ -393,6 +481,58 @@ export const Tree = ({ data, setData }) => {
       }
     }
     return null;
+  }
+
+  function setupIdenticalTwins(diagram) {
+    const model = diagram.model;
+    const nodeDataArray = model.nodeDataArray;
+    for (let i = 0; i < nodeDataArray.length; i++) {
+      const data1 = nodeDataArray[i];
+      if (typeof data1.identical === "number") {
+        const key1 = data1.key;
+        const key2 = data1.identical;
+        const data2 = model.findNodeDataForKey(key2);
+
+        if (data2 !== null && data1.m === data2.m && data1.f === data2.f) {
+          const T1 = diagram.findNodeForKey(key1);
+          const T2 = diagram.findNodeForKey(key2);
+
+          const TPL1 = T1.findTreeParentLink();
+          const TPL2 = T2.findTreeParentLink();
+
+          if (TPL1 && TPL2) {
+            let TLN1 = TPL1.labelNodes.first();
+            if (!TLN1) {
+              TLN1 = new go.Node();
+              TLN1.isLayoutPositioned = false;
+              TLN1.labeledLink = TPL1;
+              TLN1.segmentIndex = -2;
+              TLN1.segmentFraction = 0.25;
+              diagram.add(TLN1);
+            }
+
+            let TLN2 = TPL2.labelNodes.first();
+            if (!TLN2) {
+              TLN2 = new go.Node();
+              TLN2.isLayoutPositioned = false;
+              TLN2.labeledLink = TPL2;
+              TLN2.segmentIndex = -2;
+              TLN2.segmentFraction = 0.25;
+              diagram.add(TLN2);
+            }
+
+            let TL = TLN1.findLinksBetween(TLN2).first();
+            if (!TL) {
+              const tlinktempl = diagram.linkTemplateMap.get("Identical");
+              TL = tlinktempl.copy();
+              TL.fromNode = TLN1;
+              TL.toNode = TLN2;
+              diagram.add(TL);
+            }
+          }
+        }
+      }
+    }
   }
 
   // now process the node data to determine marriages
@@ -428,6 +568,7 @@ export const Tree = ({ data, setData }) => {
               category: "Marriage",
             };
             if (data.cm || wdata.cm) mdata.cm = true; // copy cm to link data
+            if (data.bosanmis || wdata.bosanmis) mdata.bosanmis = true;
             model.addLinkData(mdata);
           }
         }
@@ -458,6 +599,7 @@ export const Tree = ({ data, setData }) => {
               category: "Marriage",
             };
             if (data.cm || hdata.cm) mdata.cm = true;
+            if (data.bosanmis || hdata.bosanmis) mdata.bosanmis = true;
             model.addLinkData(mdata);
           }
         }
@@ -490,8 +632,9 @@ export const Tree = ({ data, setData }) => {
       }
     }
   }
-
   // A custom layout that shows the two families related to a person's parents
+
+  /*
   class GenogramLayout extends go.LayeredDigraphLayout {
     constructor() {
       super();
@@ -782,6 +925,235 @@ export const Tree = ({ data, setData }) => {
     }
   }
   // end GenogramLayout class
+  */
+
+  function GenogramLayout() {
+    go.LayeredDigraphLayout.call(this);
+    this.initializeOption = go.LayeredDigraphLayout.InitDepthFirstIn;
+  }
+  go.Diagram.inherit(GenogramLayout, go.LayeredDigraphLayout);
+
+  GenogramLayout.prototype.makeNetwork = function (coll) {
+    // generate LayoutEdges for each parent-child Link
+    let net = this.createNetwork();
+    if (coll instanceof go.Diagram) {
+      this.add(net, coll.nodes, true);
+      this.add(net, coll.links, true);
+    } else if (coll instanceof go.Group) {
+      this.add(net, coll.memberParts, false);
+    } else if (coll.iterator) {
+      this.add(net, coll.iterator, false);
+    }
+    return net;
+  };
+
+  // internal method for creating LayeredDigraphNetwork where husband/wife pairs are represented
+  // by a single LayeredDigraphVertex corresponding to the label Node on the marriage Link
+  GenogramLayout.prototype.add = function (net, coll, nonmemberonly) {
+    // consider all Nodes in the given collection
+    let it = coll.iterator;
+    while (it.next()) {
+      let node = it.value;
+      if (!(node instanceof go.Node)) continue;
+      if (!node.isLayoutPositioned || !node.isVisible()) continue;
+      if (nonmemberonly && node.containingGroup !== null) continue;
+      // if it's an unmarried Node, or if it's a Link Label Node, create a LayoutVertex for it
+      if (node.isLinkLabel) {
+        // get marriage Link
+        let link = node.labeledLink;
+        let spouseA = link.fromNode;
+        let spouseB = link.toNode;
+        // create vertex representing both husband and wife
+        var vertex = net.addNode(node);
+        // now define the vertex size to be big enough to hold both spouses
+        vertex.width =
+          spouseA.actualBounds.width + 30 + spouseB.actualBounds.width;
+        vertex.height = Math.max(
+          spouseA.actualBounds.height,
+          spouseB.actualBounds.height
+        );
+        vertex.focus = new go.Point(
+          spouseA.actualBounds.width + 30 / 2,
+          vertex.height / 2
+        );
+      } else {
+        // don't add a vertex for any married person!
+        // instead, code above adds label node for marriage link
+        // assume a marriage Link has a label Node
+        if (
+          !node.linksConnected.any(function (l) {
+            return l.category === "Marriage";
+          })
+        ) {
+          vertex = net.addNode(node);
+        }
+      }
+    }
+    // now do all Links
+    it.reset();
+    while (it.next()) {
+      let link = it.value;
+      if (!(link instanceof go.Link)) continue;
+      if (!link.isLayoutPositioned || !link.isVisible()) continue;
+      if (nonmemberonly && link.containingGroup !== null) continue;
+      // if it's a parent-child link, add a LayoutEdge for it
+      if (link.category !== "Marriage") {
+        let parent = net.findVertex(link.fromNode); // should be a label node
+        let child = net.findVertex(link.toNode);
+        if (child !== null) {
+          // an unmarried child
+          net.linkVertexes(parent, child, link);
+        } else {
+          // a married child
+          link.toNode.linksConnected.each(function (l) {
+            if (l.category !== "Marriage") return; // if it has no label node, it's a parent-child link
+            // found the Marriage Link, now get its label Node
+            let mlab = l.labelNodes.first();
+            // parent-child link should connect with the label node,
+            // so the LayoutEdge should connect with the LayoutVertex representing the label node
+            let mlabvert = net.findVertex(mlab);
+            if (mlabvert !== null) {
+              net.linkVertexes(parent, mlabvert, link);
+            }
+          });
+        }
+      }
+    }
+  };
+
+  GenogramLayout.prototype.assignLayers = function () {
+    go.LayeredDigraphLayout.prototype.assignLayers.call(this);
+    let horiz = this.direction == 0.0 || this.direction == 180.0;
+    // for every vertex, record the maximum vertex width or height for the vertex's layer
+    let maxsizes = [];
+    this.network.vertexes.each(function (v) {
+      let lay = v.layer;
+      let max = maxsizes[lay];
+      if (max === undefined) max = 0;
+      let sz = horiz ? v.width : v.height;
+      if (sz > max) maxsizes[lay] = sz;
+    });
+    // now make sure every vertex has the maximum width or height according to which layer it is in,
+    // and aligned on the left (if horizontal) or the top (if vertical)
+    this.network.vertexes.each(function (v) {
+      let lay = v.layer;
+      let max = maxsizes[lay];
+      if (horiz) {
+        v.focus = new go.Point(0, v.height / 2);
+        v.width = max;
+      } else {
+        v.focus = new go.Point(v.width / 2, 0);
+        v.height = max;
+      }
+    });
+    // from now on, the LayeredDigraphLayout will think that the Node is bigger than it really is
+    // (other than the ones that are the widest or tallest in their respective layer).
+  };
+
+  GenogramLayout.prototype.commitNodes = function () {
+    go.LayeredDigraphLayout.prototype.commitNodes.call(this);
+    // position regular nodes
+    this.network.vertexes.each(function (v) {
+      if (v.node !== null && !v.node.isLinkLabel) {
+        v.node.position = new go.Point(v.x, v.y);
+      }
+    });
+    // position the spouses of each marriage vertex
+    let layout = this;
+    this.network.vertexes.each(function (v) {
+      if (v.node === null) return;
+      if (!v.node.isLinkLabel) return;
+      let labnode = v.node;
+      let lablink = labnode.labeledLink;
+      // In case the spouses are not actually moved, we need to have the marriage link
+      // position the label node, because LayoutVertex.commit() was called above on these vertexes.
+      // Alternatively we could override LayoutVetex.commit to be a no-op for label node vertexes.
+      lablink.invalidateRoute();
+      let spouseA = lablink.fromNode;
+      let spouseB = lablink.toNode;
+      // prefer fathers on the left, mothers on the right
+      if (spouseA.data.s === "F") {
+        // sex is female
+        let temp = spouseA;
+        spouseA = spouseB;
+        spouseB = temp;
+      }
+      // see if the parents are on the desired sides, to avoid a link crossing
+      let aParentsNode = layout.findParentsMarriageLabelNode(spouseA);
+      let bParentsNode = layout.findParentsMarriageLabelNode(spouseB);
+      if (
+        aParentsNode !== null &&
+        bParentsNode !== null &&
+        aParentsNode.position.x > bParentsNode.position.x
+      ) {
+        // swap the spouses
+        let temp = spouseA;
+        spouseA = spouseB;
+        spouseB = temp;
+      }
+      spouseA.position = new go.Point(v.x, v.y);
+      spouseB.position = new go.Point(
+        v.x + spouseA.actualBounds.width + 30,
+        v.y
+      );
+      if (spouseA.opacity === 0) {
+        let pos = new go.Point(v.centerX - spouseA.actualBounds.width / 2, v.y);
+        spouseA.position = pos;
+        spouseB.position = pos;
+      } else if (spouseB.opacity === 0) {
+        let pos = new go.Point(v.centerX - spouseB.actualBounds.width / 2, v.y);
+        spouseA.position = pos;
+        spouseB.position = pos;
+      }
+    });
+  };
+
+  GenogramLayout.prototype.findParentsMarriageLabelNode = function (node) {
+    let it = node.findNodesInto();
+    while (it.next()) {
+      let n = it.value;
+      if (n.isLinkLabel) return n;
+    }
+    return null;
+  };
+
+  // end GenogramLayout class
+
+  // custom routing for same birth siblings
+  function ParentChildLink() {
+    go.Link.call(this);
+  }
+  go.Diagram.inherit(ParentChildLink, go.Link);
+
+  ParentChildLink.prototype.computePoints = function () {
+    let result = go.Link.prototype.computePoints.call(this);
+    let pts = this.points;
+    if (pts.length >= 4) {
+      let birthId = this.toNode.data["birth"];
+      if (birthId) {
+        let parents = this.fromNode;
+        let sameBirth = 0;
+        let sumX = 0;
+        let it = parents.findNodesOutOf();
+        while (it.next()) {
+          let child = it.value;
+          if (child.data["birth"] === birthId) {
+            sameBirth++;
+            sumX += child.location.x;
+          }
+        }
+        if (sameBirth > 0) {
+          let midX = sumX / sameBirth;
+          let midY = pts.elt(0).y + 57; //??? adjust to suit your node sizes and layer spacing
+          pts.setElt(pts.length - 4, new go.Point(pts.elt(0).x, midY));
+          pts.setElt(pts.length - 3, new go.Point(midX, midY));
+          pts.setElt(pts.length - 2, pts.elt(pts.length - 1));
+        }
+      }
+    }
+    return result;
+  };
+  // end ParentChildLink class
 
   useEffect(() => {
     setData(temp);
@@ -819,92 +1191,152 @@ export const Tree = ({ data, setData }) => {
     const checkTasiyici = document.getElementById("checkTasiyici");
     const divAkraba = document.getElementById("divAkraba");
     const checkAkraba = document.getElementById("checkAkraba");
+    //const btnMonozigot = document.getElementById("btnMonozigot");
+    //const btnDizigot = document.getElementById("btnDizigot");
+    const btnIkizSil = document.getElementById("btnIkizSil");
+    const colCheck = document.getElementById("colCheck");
+    const colBtns = document.getElementById("colBtns");
+    const btnSil = document.getElementById("btnSil");
 
     // kimse seçili değilse
     if (selected.length === 0) {
       formDiv.classList.add("invisible");
-    }
-    // 1 seçili kişi için
-    else if (selected.length === 1) {
-      formDiv.classList.remove("invisible");
-      btnAddEvlilik.disabled = true;
-      def.classList.remove("invisible");
-      txt.classList.remove("invisible");
-      txt.value = selected[0].n;
-      if (selected[0].color === "black") {
-        checkHasta.checked = true;
-      } else {
-        checkHasta.checked = false;
-      }
-      checkTasiyici.checked = selected[0].carry;
-      if (selected[0].a.includes("S")) {
-        checkOlu.checked = true;
-      } else {
-        checkOlu.checked = false;
-      }
-      if (
-        selected[0].hasOwnProperty("vir") ||
-        selected[0].hasOwnProperty("ux")
-      ) {
-        divAkraba.classList.remove("invisible");
-        btnAddErkekCocuk.disabled = false;
-        btnAddKizCocuk.disabled = false;
-        if (selected[0].hasOwnProperty("cm") && selected[0].cm) {
-          checkAkraba.checked = true;
-        } else {
-          checkAkraba.checked = false;
+      btnSil.disabled = true;
+    } else {
+      btnSil.disabled = false;
+      let dusuk = false;
+      for (let i = 0; i < selected.length; i++) {
+        if (selected[i].s === "D") {
+          dusuk = true;
         }
-      } else {
-        divAkraba.classList.add("invisible");
-        btnAddErkekCocuk.disabled = true;
-        btnAddKizCocuk.disabled = true;
       }
-      if (selected[0].hasOwnProperty("m")) {
-        btnAddEbeveyn.disabled = true;
-        btnAddErkek.disabled = false;
-        btnAddKiz.disabled = false;
-      } else {
-        btnAddEbeveyn.disabled = false;
-        btnAddErkek.disabled = true;
-        btnAddKiz.disabled = true;
+      if (dusuk) {
+        colCheck.classList.add("invisible");
+        colBtns.classList.add("invisible");
+        txt.value = selected[0].n;
+        if (selected.length === 1) {
+          formDiv.classList.remove("invisible");
+        } else {
+          formDiv.classList.add("invisible");
+        }
       }
-    }
-    // 2 seçili kişi için
-    else if (selected.length === 2) {
-      formDiv.classList.remove("invisible");
-      def.classList.add("invisible");
-      txt.classList.add("invisible");
-      checkHasta.checked = false;
-      checkTasiyici.checked = false;
-      checkOlu.checked = false;
-
-      //evliyseler
-      if (
-        selected[0].hasOwnProperty("vir") ||
-        selected[0].hasOwnProperty("ux")
-      ) {
+      // 1 seçili kişi için
+      else if (selected.length === 1) {
+        colCheck.classList.remove("invisible");
+        colBtns.classList.remove("invisible");
+        //btnMonozigot.disabled = true;
+        //btnDizigot.disabled = true;
+        if (selected[0].hasOwnProperty("birth")) {
+          btnIkizSil.disabled = false;
+        } else {
+          btnIkizSil.disabled = true;
+        }
+        formDiv.classList.remove("invisible");
         btnAddEvlilik.disabled = true;
-
-        //birbirleriyle evliyseler
+        def.classList.remove("invisible");
+        txt.classList.remove("invisible");
+        txt.value = selected[0].n;
+        if (selected[0].color === "black") {
+          checkHasta.checked = true;
+        } else {
+          checkHasta.checked = false;
+        }
+        checkTasiyici.checked = selected[0].carry;
+        if (selected[0].a.includes("S")) {
+          checkOlu.checked = true;
+        } else {
+          checkOlu.checked = false;
+        }
         if (
-          (selected[0].hasOwnProperty("vir") &&
-            selected[0].vir === selected[1].key) ||
-          (selected[0].hasOwnProperty("ux") &&
-            selected[0].ux === selected[1].key)
+          selected[0].hasOwnProperty("vir") ||
+          selected[0].hasOwnProperty("ux")
         ) {
           divAkraba.classList.remove("invisible");
+          btnAddErkekCocuk.disabled = false;
+          btnAddKizCocuk.disabled = false;
           if (selected[0].hasOwnProperty("cm") && selected[0].cm) {
             checkAkraba.checked = true;
           } else {
             checkAkraba.checked = false;
           }
-          btnAddErkekCocuk.disabled = false;
-          btnAddKizCocuk.disabled = false;
+        } else {
+          divAkraba.classList.add("invisible");
+          btnAddErkekCocuk.disabled = true;
+          btnAddKizCocuk.disabled = true;
+        }
+        if (selected[0].hasOwnProperty("m")) {
           btnAddEbeveyn.disabled = true;
+          btnAddErkek.disabled = false;
+          btnAddKiz.disabled = false;
+        } else {
+          btnAddEbeveyn.disabled = false;
           btnAddErkek.disabled = true;
           btnAddKiz.disabled = true;
         }
-        //başkasıyla evliyseler
+      }
+      // 2 seçili kişi için
+      else if (selected.length === 2) {
+        colCheck.classList.remove("invisible");
+        colBtns.classList.remove("invisible");
+        formDiv.classList.remove("invisible");
+        def.classList.add("invisible");
+        txt.classList.add("invisible");
+        checkHasta.checked = false;
+        checkTasiyici.checked = false;
+        checkOlu.checked = false;
+
+        //evliyseler
+        if (
+          selected[0].hasOwnProperty("vir") ||
+          selected[0].hasOwnProperty("ux")
+        ) {
+          btnAddEvlilik.disabled = true;
+
+          //birbirleriyle evliyseler
+          if (
+            (selected[0].hasOwnProperty("vir") &&
+              selected[0].vir === selected[1].key) ||
+            (selected[0].hasOwnProperty("ux") &&
+              selected[0].ux === selected[1].key)
+          ) {
+            divAkraba.classList.remove("invisible");
+            if (selected[0].hasOwnProperty("cm") && selected[0].cm) {
+              checkAkraba.checked = true;
+            } else {
+              checkAkraba.checked = false;
+            }
+            btnAddErkekCocuk.disabled = false;
+            btnAddKizCocuk.disabled = false;
+            btnAddEbeveyn.disabled = true;
+            btnAddErkek.disabled = true;
+            btnAddKiz.disabled = true;
+          }
+          //başkasıyla evliyseler
+          else {
+            btnAddErkekCocuk.disabled = true;
+            btnAddKizCocuk.disabled = true;
+            if (
+              selected[0].hasOwnProperty("m") ||
+              selected[1].hasOwnProperty("m")
+            ) {
+              btnAddEbeveyn.disabled = true;
+            } else {
+              btnAddEbeveyn.disabled = false;
+            }
+            if (
+              selected[0].hasOwnProperty("m") &&
+              selected[1].hasOwnProperty("m") &&
+              selected[0].m === selected[1].m
+            ) {
+              btnAddErkek.disabled = false;
+              btnAddKiz.disabled = false;
+            } else {
+              btnAddErkek.disabled = true;
+              btnAddKiz.disabled = true;
+            }
+          }
+        }
+        //evli değilseler
         else {
           btnAddErkekCocuk.disabled = true;
           btnAddKizCocuk.disabled = true;
@@ -915,6 +1347,16 @@ export const Tree = ({ data, setData }) => {
             btnAddEbeveyn.disabled = true;
           } else {
             btnAddEbeveyn.disabled = false;
+          }
+          if (
+            (selected[0].hasOwnProperty("m") &&
+              selected[1].hasOwnProperty("m") &&
+              selected[0].m === selected[1].m) ||
+            selected[0].s === selected[1].s
+          ) {
+            btnAddEvlilik.disabled = true;
+          } else {
+            btnAddEvlilik.disabled = false;
           }
           if (
             selected[0].hasOwnProperty("m") &&
@@ -929,100 +1371,96 @@ export const Tree = ({ data, setData }) => {
           }
         }
       }
-      //evli değilseler
+
+      // 2'den fazla seçili kişi için
       else {
+        colCheck.classList.remove("invisible");
+        colBtns.classList.remove("invisible");
+        formDiv.classList.remove("invisible");
+        def.classList.add("invisible");
+        txt.classList.add("invisible");
+        checkHasta.checked = false;
+        checkTasiyici.checked = false;
+        checkOlu.checked = false;
+        divAkraba.classList.add("invisible");
+        btnAddEvlilik.disabled = true;
         btnAddErkekCocuk.disabled = true;
         btnAddKizCocuk.disabled = true;
-        if (
-          selected[0].hasOwnProperty("m") ||
-          selected[1].hasOwnProperty("m")
-        ) {
-          btnAddEbeveyn.disabled = true;
-        } else {
-          btnAddEbeveyn.disabled = false;
-        }
-        if (
-          (selected[0].hasOwnProperty("m") &&
-            selected[1].hasOwnProperty("m") &&
-            selected[0].m === selected[1].m) ||
-          selected[0].s === selected[1].s
-        ) {
-          btnAddEvlilik.disabled = true;
-        } else {
-          btnAddEvlilik.disabled = false;
-        }
-        if (
-          selected[0].hasOwnProperty("m") &&
-          selected[1].hasOwnProperty("m") &&
-          selected[0].m === selected[1].m
-        ) {
-          btnAddErkek.disabled = false;
-          btnAddKiz.disabled = false;
-        } else {
-          btnAddErkek.disabled = true;
-          btnAddKiz.disabled = true;
-        }
-      }
-    }
-
-    // 2'den fazla seçili kişi için
-    else {
-      formDiv.classList.remove("invisible");
-      def.classList.add("invisible");
-      txt.classList.add("invisible");
-      checkHasta.checked = false;
-      checkTasiyici.checked = false;
-      checkOlu.checked = false;
-      divAkraba.classList.add("invisible");
-      btnAddEvlilik.disabled = true;
-      btnAddErkekCocuk.disabled = true;
-      btnAddKizCocuk.disabled = true;
-      let hasM = 0;
-      let ms = [];
-      for (let i = 0; i < selected.length; i++) {
-        if (selected[i].hasOwnProperty("m")) {
-          hasM++;
-          ms.push(selected[i].m);
-        }
-      }
-      if (hasM === 0) {
-        let married = false;
+        let hasM = 0;
+        let ms = [];
         for (let i = 0; i < selected.length; i++) {
-          for (let j = i + 1; j < selected.length; j++) {
-            if (
-              (selected[i].hasOwnProperty("vir") &&
-                selected[i].vir === selected[j].key) ||
-              (selected[i].hasOwnProperty("ux") &&
-                selected[i].ux === selected[j].key)
-            ) {
-              married = true;
+          if (selected[i].hasOwnProperty("m")) {
+            hasM++;
+            ms.push(selected[i].m);
+          }
+        }
+        if (hasM === 0) {
+          let married = false;
+          for (let i = 0; i < selected.length; i++) {
+            for (let j = i + 1; j < selected.length; j++) {
+              if (
+                (selected[i].hasOwnProperty("vir") &&
+                  selected[i].vir === selected[j].key) ||
+                (selected[i].hasOwnProperty("ux") &&
+                  selected[i].ux === selected[j].key)
+              ) {
+                married = true;
+              }
             }
           }
-        }
 
-        if (married === false) {
-          btnAddEbeveyn.disabled = false;
+          if (married === false) {
+            btnAddEbeveyn.disabled = false;
+          } else {
+            btnAddEbeveyn.disabled = true;
+          }
         } else {
           btnAddEbeveyn.disabled = true;
-        }
-      } else {
-        btnAddEbeveyn.disabled = true;
-        let same = true;
-        for (let i = 1; i < ms.length; i++) {
-          if (ms[0] !== ms[i]) {
-            same = false;
+          let same = true;
+          for (let i = 1; i < ms.length; i++) {
+            if (ms[0] !== ms[i]) {
+              same = false;
+            }
           }
-        }
-        if (same && ms.length === selected.length) {
-          btnAddErkek.disabled = false;
-          btnAddKiz.disabled = false;
-        } else {
-          btnAddErkek.disabled = true;
-          btnAddKiz.disabled = true;
+          if (same && ms.length === selected.length) {
+            btnAddErkek.disabled = false;
+            btnAddKiz.disabled = false;
+          } else {
+            btnAddErkek.disabled = true;
+            btnAddKiz.disabled = true;
+          }
         }
       }
     }
   }, [selected]);
+
+  const addDusukCocuk = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    let mother, father;
+    if (selected[0].s == "F") {
+      mother = selected[0].key;
+      father = selected[0].vir;
+    } else {
+      mother = selected[0].ux;
+      father = selected[0].key;
+    }
+    let tempObj = {
+      key: tempData[tempData.length - 1].key + 1,
+      n: "",
+      s: "D",
+      m: mother,
+      f: father,
+    };
+    tempData.push(tempObj);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelected([]);
+  };
 
   const addErkekKardes = () => {
     let tempData = [];
@@ -1287,88 +1725,91 @@ export const Tree = ({ data, setData }) => {
     if (selected.length === 1) {
       let index = tempData.indexOf(selected[0]);
       tempData[index].n = txt.value;
-      if (checkOlu.checked) {
-        tempData[index].a = ["S"];
-      } else {
-        tempData[index].a = [];
-      }
-      if (checkHasta.checked) {
-        tempData[index].color = "black";
-      } else {
-        tempData[index].color = "white";
-      }
-      if (checkTasiyici.checked) {
-        tempData[index].carry = true;
-      } else {
-        tempData[index].carry = false;
-      }
-      if (
-        selected[0].hasOwnProperty("vir") ||
-        selected[0].hasOwnProperty("ux")
-      ) {
-        let index2;
-        for (let i = 0; i < tempData.length; i++) {
-          if (
-            (selected[0].hasOwnProperty("vir") &&
-              tempData[i].key === selected[0].vir) ||
-            (selected[0].hasOwnProperty("ux") &&
-              tempData[i].key === selected[0].ux)
-          ) {
-            index2 = i;
+      if (selected[0].s !== "D") {
+        if (checkOlu.checked) {
+          tempData[index].a = ["S"];
+        } else {
+          tempData[index].a = [];
+        }
+        if (checkHasta.checked) {
+          tempData[index].color = "black";
+        } else {
+          tempData[index].color = "white";
+        }
+        if (checkTasiyici.checked) {
+          tempData[index].carry = true;
+        } else {
+          tempData[index].carry = false;
+        }
+        if (
+          selected[0].hasOwnProperty("vir") ||
+          selected[0].hasOwnProperty("ux")
+        ) {
+          let index2;
+          for (let i = 0; i < tempData.length; i++) {
+            if (
+              (selected[0].hasOwnProperty("vir") &&
+                tempData[i].key === selected[0].vir) ||
+              (selected[0].hasOwnProperty("ux") &&
+                tempData[i].key === selected[0].ux)
+            ) {
+              index2 = i;
+            }
+          }
+          if (checkAkraba.checked) {
+            tempData[index].cm = true;
+            tempData[index2].cm = true;
+          } else {
+            tempData[index].cm = false;
+            tempData[index2].cm = false;
           }
         }
-        if (checkAkraba.checked) {
-          tempData[index].cm = true;
-          tempData[index2].cm = true;
+      } else {
+        let indexes = [];
+        for (let i = 0; i < selected.length; i++) {
+          indexes.push(tempData.indexOf(selected[i]));
+        }
+        if (checkOlu.checked) {
+          for (let i = 0; i < indexes.length; i++) {
+            tempData[indexes[i]].a = "S";
+          }
         } else {
-          tempData[index].cm = false;
-          tempData[index2].cm = false;
+          for (let i = 0; i < indexes.length; i++) {
+            tempData[indexes[i]].a = [];
+          }
         }
-      }
-    } else {
-      let indexes = [];
-      for (let i = 0; i < selected.length; i++) {
-        indexes.push(tempData.indexOf(selected[i]));
-      }
-      if (checkOlu.checked) {
-        for (let i = 0; i < indexes.length; i++) {
-          tempData[indexes[i]].a = "S";
-        }
-      } else {
-        for (let i = 0; i < indexes.length; i++) {
-          tempData[indexes[i]].a = [];
-        }
-      }
-      if (checkHasta.checked) {
-        for (let i = 0; i < indexes.length; i++) {
-          tempData[indexes[i]].color = "black";
-        }
-      } else {
-        for (let i = 0; i < indexes.length; i++) {
-          tempData[indexes[i]].color = "white";
-        }
-      }
-      if (checkTasiyici.checked) {
-        for (let i = 0; i < indexes.length; i++) {
-          tempData[indexes[i]].carry = true;
-        }
-      } else {
-        for (let i = 0; i < indexes.length; i++) {
-          tempData[indexes[i]].carry = false;
-        }
-      }
-      if (
-        (selected.length == 2 &&
-          selected[0].hasOwnProperty("vir") &&
-          selected[0].vir === selected[1].key) ||
-        (selected[0].hasOwnProperty("ux") && selected[0].ux === selected[1].key)
-      ) {
-        if (checkAkraba.checked) {
-          tempData[indexes[0]].cm = true;
-          tempData[indexes[1]].cm = true;
+        if (checkHasta.checked) {
+          for (let i = 0; i < indexes.length; i++) {
+            tempData[indexes[i]].color = "black";
+          }
         } else {
-          tempData[indexes[0]].cm = false;
-          tempData[indexes[1]].cm = false;
+          for (let i = 0; i < indexes.length; i++) {
+            tempData[indexes[i]].color = "white";
+          }
+        }
+        if (checkTasiyici.checked) {
+          for (let i = 0; i < indexes.length; i++) {
+            tempData[indexes[i]].carry = true;
+          }
+        } else {
+          for (let i = 0; i < indexes.length; i++) {
+            tempData[indexes[i]].carry = false;
+          }
+        }
+        if (
+          (selected.length == 2 &&
+            selected[0].hasOwnProperty("vir") &&
+            selected[0].vir === selected[1].key) ||
+          (selected[0].hasOwnProperty("ux") &&
+            selected[0].ux === selected[1].key)
+        ) {
+          if (checkAkraba.checked) {
+            tempData[indexes[0]].cm = true;
+            tempData[indexes[1]].cm = true;
+          } else {
+            tempData[indexes[0]].cm = false;
+            tempData[indexes[1]].cm = false;
+          }
         }
       }
     }
@@ -1520,8 +1961,59 @@ export const Tree = ({ data, setData }) => {
   };
 
   const click = () => {
-    console.log(go.Panel.itemArray);
+    console.log(temp);
   };
+
+  const ikizSil = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    delete tempData[tempData.indexOf(selected[0])].birth;
+    delete tempData[tempData.indexOf(selected[0])].identical;
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelected([]);
+  };
+
+  const monozigot = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    for (let i = 0; i < selected.length; i++) {
+      tempData[tempData.indexOf(selected[i])].birth = births + 1;
+      if (i !== 0) {
+        tempData[tempData.indexOf(selected[i])].identical = selected[i - 1].key;
+      }
+    }
+    setBirths((prev) => prev + 1);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelected([]);
+  };
+
+  const dizigot = () => {
+    let tempData = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].hasOwnProperty("n")) {
+        tempData.push(data[i]);
+      }
+    }
+    for (let i = 0; i < selected.length; i++) {
+      tempData[tempData.indexOf(selected[i])].birth = births + 1;
+    }
+    setBirths((prev) => prev + 1);
+    setTemp(tempData);
+    document.getElementById("formDiv").classList.add("invisible");
+    setSelected([]);
+  };
+
+  const [births, setBirths] = useState(0);
 
   return (
     <div id="allSampleContent" className="p-4 w-full">
@@ -1569,12 +2061,54 @@ export const Tree = ({ data, setData }) => {
           </InputGroup>
         </Col>
       </Row>
-      <div id="sample">
-        <div id="myDiagramDiv"></div>
-      </div>
+      <Row id="disDiv">
+        <Col xs="8" id="sample">
+          <div id="myDiagramDiv"></div>
+        </Col>
+        <Col xs="4" id="btnsDiv">
+          <Row>
+            <Col xs="6">
+              <Button
+                className="addBtn"
+                variant="primary"
+                onClick={() => {
+                  addYeniKisiKadin();
+                }}
+              >
+                Yeni kişi ekle (Kadın)
+              </Button>
+            </Col>
+            <Col xs="6">
+              <Button
+                className="addBtn"
+                variant="primary"
+                onClick={() => {
+                  addYeniKisiErkek();
+                }}
+              >
+                Yeni kişi ekle (Erkek)
+              </Button>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Button
+                id="btnSil"
+                className="addBtn"
+                variant="danger"
+                onClick={() => {
+                  kisiyiSil();
+                }}
+              >
+                Kişiyi sil
+              </Button>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
       <div id="formDiv" className="invisible">
         <Row>
-          <Col xs="4" id="colCheck" className="colDef">
+          <Col xs="4" id="colCheck">
             <Row>
               <div>
                 <Form.Check label="Hasta" type="checkbox" id="checkHasta" />
@@ -1636,7 +2170,7 @@ export const Tree = ({ data, setData }) => {
               </Col>
             </Row>
             <Row>
-              <Col xs="6">
+              <Col xs="4">
                 <Button
                   id="btnAddKizCocuk"
                   className="addBtn"
@@ -1648,7 +2182,7 @@ export const Tree = ({ data, setData }) => {
                   Kız çocuk ekle
                 </Button>
               </Col>
-              <Col xs="6">
+              <Col xs="4">
                 <Button
                   id="btnAddErkekCocuk"
                   className="addBtn"
@@ -1658,6 +2192,18 @@ export const Tree = ({ data, setData }) => {
                   }}
                 >
                   Erkek çocuk ekle
+                </Button>
+              </Col>
+              <Col xs="4">
+                <Button
+                  id="btnAddDusukCocuk"
+                  className="addBtn"
+                  variant="primary"
+                  onClick={() => {
+                    addDusukCocuk();
+                  }}
+                >
+                  Düşük çocuk ekle
                 </Button>
               </Col>
             </Row>
@@ -1687,41 +2233,37 @@ export const Tree = ({ data, setData }) => {
                 </Button>
               </Col>
             </Row>
-            <hr />
             <Row>
               <Col xs="6">
                 <Button
+                  id="btnMonozigot"
                   className="addBtn"
                   variant="primary"
-                  onClick={() => {
-                    addYeniKisiKadin();
-                  }}
+                  onClick={monozigot}
                 >
-                  Yeni kişi ekle (Kadın)
+                  Monozigot ikiz
                 </Button>
               </Col>
               <Col xs="6">
                 <Button
+                  id="btnDizigot"
                   className="addBtn"
                   variant="primary"
-                  onClick={() => {
-                    addYeniKisiErkek();
-                  }}
+                  onClick={dizigot}
                 >
-                  Yeni kişi ekle (Erkek)
+                  Dizigot ikiz
                 </Button>
               </Col>
             </Row>
             <Row>
               <Col>
                 <Button
+                  id="btnIkizSil"
                   className="addBtn"
                   variant="danger"
-                  onClick={() => {
-                    kisiyiSil();
-                  }}
+                  onClick={ikizSil}
                 >
-                  Kişiyi sil
+                  İkiz sil
                 </Button>
               </Col>
             </Row>

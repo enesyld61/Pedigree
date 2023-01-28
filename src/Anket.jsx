@@ -35,6 +35,7 @@ export const Anket = ({ setData }) => {
         color: "white",
         carry: false,
         cm: false,
+        bosanmis: true,
       },
       {
         key: 1,
@@ -45,6 +46,7 @@ export const Anket = ({ setData }) => {
         color: "white",
         carry: false,
         cm: false,
+        bosanmis: true,
       },
       {
         key: 2,
